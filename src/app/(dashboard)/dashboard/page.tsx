@@ -87,13 +87,7 @@ export default function DashboardPage() {
           <p className="text-muted-foreground text-sm">Gestiona tus cultivos inteligentes.</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setNewCrop({ name: "", type: "" });
-            setSearchQuery("");
-          }
-        }}>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button size="icon" className="rounded-full shadow-lg">
               <PlusCircle className="w-6 h-6" />
@@ -121,16 +115,23 @@ export default function DashboardPage() {
                 <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       role="combobox"
                       aria-expanded={isPopoverOpen}
                       className="w-full justify-between h-11 font-normal"
                     >
-                      {newCrop.type || "Selecciona o busca un tipo..."}
+                      <span className="truncate">
+                        {newCrop.type || "Selecciona un tipo..."}
+                      </span>
                       <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <PopoverContent 
+                    className="w-[var(--radix-popover-trigger-width)] p-0" 
+                    align="start"
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                  >
                     <div className="flex items-center border-b px-3">
                       <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                       <Input
@@ -148,10 +149,11 @@ export default function DashboardPage() {
                           </p>
                         ) : (
                           filteredPlantTypes.map((type) => (
-                            <div
+                            <button
                               key={type}
+                              type="button"
                               className={cn(
-                                "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors",
+                                "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors text-left",
                                 newCrop.type === type && "bg-accent/50 text-accent-foreground"
                               )}
                               onClick={() => {
@@ -167,7 +169,7 @@ export default function DashboardPage() {
                                 )}
                               />
                               {type}
-                            </div>
+                            </button>
                           ))
                         )}
                       </div>
@@ -176,7 +178,7 @@ export default function DashboardPage() {
                 </Popover>
                 {!newCrop.type && searchQuery && filteredPlantTypes.length === 0 && (
                   <p className="text-[10px] text-destructive px-1">
-                    Debes seleccionar una opción válida de la lista.
+                    Debes seleccionar una opción de la lista.
                   </p>
                 )}
               </div>
