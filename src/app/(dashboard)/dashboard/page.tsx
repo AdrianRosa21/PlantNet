@@ -4,7 +4,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { PlusCircle, Sprout, Loader2, ChevronRight, Droplets, Search, Check, X } from "lucide-react";
+import { Plus, Sprout, Loader2, ChevronRight, Droplets, Search, Check, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -52,7 +52,6 @@ export default function DashboardPage() {
     );
   }, [searchQuery]);
 
-  // Cerrar dropdown si se hace clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -106,7 +105,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight">¡Hola, {user?.displayName?.split(' ')[0] || 'Productor'}! 👋</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-primary">¡Hola, {user?.displayName?.split(' ')[0] || 'Productor'}! 👋</h1>
           <p className="text-muted-foreground text-sm">Gestiona tus cultivos inteligentes.</p>
         </div>
         
@@ -115,14 +114,20 @@ export default function DashboardPage() {
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button size="icon" className="rounded-full shadow-lg">
-              <PlusCircle className="w-6 h-6" />
+            <Button 
+              className="rounded-full w-14 h-14 shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+              size="icon"
+            >
+              <Plus className="w-8 h-8" />
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Nuevo Cultivo</DialogTitle>
-              <DialogDescription>
+              <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                <Leaf className="w-6 h-6 text-primary" />
+              </div>
+              <DialogTitle className="text-center">Nuevo Cultivo</DialogTitle>
+              <DialogDescription className="text-center">
                 Registra un nuevo cultivo para comenzar el monitoreo.
               </DialogDescription>
             </DialogHeader>
@@ -134,10 +139,10 @@ export default function DashboardPage() {
                   placeholder="Ej. Huerto Norte" 
                   value={newCrop.name}
                   onChange={(e) => setNewCrop({...newCrop, name: e.target.value})}
+                  className="h-11"
                 />
               </div>
 
-              {/* Selector de Tipo Buscable Personalizado */}
               <div className="grid gap-2 relative" ref={dropdownRef}>
                 <Label htmlFor="type-search">Tipo de planta</Label>
                 <div className="relative">
@@ -149,14 +154,13 @@ export default function DashboardPage() {
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
                       setIsDropdownOpen(true);
-                      // Si el usuario borra todo, reseteamos el tipo seleccionado
                       if (newCrop.type && e.target.value !== newCrop.type) {
                         setNewCrop(prev => ({ ...prev, type: "" }));
                       }
                     }}
                     onFocus={() => setIsDropdownOpen(true)}
                     className={cn(
-                      "pr-10",
+                      "pr-10 h-11 transition-all",
                       newCrop.type && "border-primary ring-1 ring-primary/20 bg-primary/5"
                     )}
                   />
@@ -170,27 +174,27 @@ export default function DashboardPage() {
                 </div>
 
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-card border rounded-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                    <ScrollArea className="h-48">
-                      <div className="p-1">
+                  <div className="absolute top-full left-0 right-0 z-[100] mt-2 bg-card border rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <ScrollArea className="h-56">
+                      <div className="p-2 space-y-1">
                         {filteredPlantTypes.length > 0 ? (
                           filteredPlantTypes.map((type) => (
                             <button
                               key={type}
                               type="button"
                               className={cn(
-                                "flex w-full items-center px-3 py-2 text-sm text-left hover:bg-primary/10 transition-colors rounded-sm",
-                                newCrop.type === type && "bg-primary/5 text-primary font-medium"
+                                "flex w-full items-center px-3 py-2.5 text-sm text-left hover:bg-primary/10 transition-colors rounded-lg",
+                                newCrop.type === type && "bg-primary/5 text-primary font-bold"
                               )}
                               onClick={() => handleSelectType(type)}
                             >
-                              <Sprout className="mr-2 h-4 w-4 opacity-70" />
+                              <Sprout className="mr-3 h-4 w-4 opacity-70 text-primary" />
                               {type}
                               {newCrop.type === type && <Check className="ml-auto h-4 w-4" />}
                             </button>
                           ))
                         ) : (
-                          <div className="py-6 px-4 text-center">
+                          <div className="py-8 px-4 text-center">
                             <p className="text-xs text-muted-foreground italic">No se encontraron tipos.</p>
                           </div>
                         )}
@@ -201,7 +205,7 @@ export default function DashboardPage() {
                 
                 {!newCrop.type && searchQuery && !isDropdownOpen && (
                   <p className="text-[10px] text-destructive font-medium px-1">
-                    Debes seleccionar una opción de la lista.
+                    Selecciona una opción válida de la lista.
                   </p>
                 )}
               </div>
@@ -209,7 +213,7 @@ export default function DashboardPage() {
             <DialogFooter>
               <Button 
                 onClick={handleCreateCrop} 
-                className="w-full h-11"
+                className="w-full h-12 text-base font-semibold"
                 disabled={!newCrop.name || !newCrop.type}
               >
                 Guardar Cultivo
@@ -223,22 +227,25 @@ export default function DashboardPage() {
         {crops && crops.length > 0 ? (
           crops.map((crop) => (
             <Link key={crop.id} href={`/crops/${crop.id}`}>
-              <Card className="overflow-hidden hover:border-primary/50 transition-colors group">
+              <Card className="overflow-hidden hover:border-primary/50 transition-all group active:scale-[0.98] border-none shadow-sm bg-white">
                 <CardContent className="p-4 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Sprout className="w-6 h-6 text-primary" />
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <Sprout className="w-7 h-7 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold truncate">{crop.name}</h3>
-                      <Badge variant="secondary" className="text-[10px] h-5">{crop.type}</Badge>
+                      <h3 className="font-bold text-lg truncate text-foreground">{crop.name}</h3>
+                      <Badge variant="secondary" className="text-[10px] h-5 bg-secondary/20 text-secondary-foreground border-none uppercase tracking-wider">{crop.type}</Badge>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Droplets className="w-3 h-3 text-blue-500" />
+                      <span className="flex items-center gap-1 font-medium">
+                        <Droplets className="w-3.5 h-3.5 text-blue-500" />
                         {crop.irrigationsToday}/{crop.dailyIrrigationGoal} riegos
                       </span>
-                      <span className="text-green-600 font-medium">{crop.generalStatus}</span>
+                      <span className="text-primary font-bold flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        {crop.generalStatus}
+                      </span>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -247,25 +254,30 @@ export default function DashboardPage() {
             </Link>
           ))
         ) : (
-          <Card className="border-dashed border-2 flex flex-col items-center justify-center py-12 text-center gap-4 bg-transparent">
-            <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center">
-              <Sprout className="w-8 h-8 text-primary/40" />
+          <Card className="border-dashed border-2 flex flex-col items-center justify-center py-16 text-center gap-4 bg-transparent border-primary/20">
+            <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center">
+              <Sprout className="w-10 h-10 text-primary/30" />
             </div>
             <div className="space-y-1">
-              <CardTitle className="text-lg">No hay cultivos</CardTitle>
-              <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
-                Toca el botón "+" para registrar tu primer cultivo.
+              <CardTitle className="text-xl font-bold text-primary/40">Sin cultivos aún</CardTitle>
+              <p className="text-sm text-muted-foreground max-w-[240px] mx-auto">
+                Toca el botón verde "+" para registrar tu primer cultivo inteligente.
               </p>
             </div>
           </Card>
         )}
       </div>
 
-      <div className="p-4 bg-secondary/10 rounded-2xl border border-secondary/20">
-        <h3 className="font-semibold text-secondary-foreground text-sm mb-1">Monitoreo Inteligente</h3>
-        <p className="text-xs text-muted-foreground">
-          AgroAlerta analiza la salud de tus plantas usando IA para detectar problemas temprano.
-        </p>
+      <div className="p-5 bg-primary/5 rounded-3xl border border-primary/10 flex items-start gap-3">
+        <div className="mt-1">
+          <Leaf className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-bold text-primary text-sm mb-1">Monitoreo Inteligente</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            AgroAlerta analiza la salud de tus plantas usando IA para detectar problemas antes de que sean visibles.
+          </p>
+        </div>
       </div>
     </div>
   );
