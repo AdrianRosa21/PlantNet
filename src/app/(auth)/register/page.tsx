@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { useAuth as useFirebaseContext } from "@/firebase";
+import { useFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { auth, firestore } = useFirebaseContext();
+  const { auth, firestore } = useFirebase();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +34,6 @@ export default function RegisterPage() {
 
       await updateProfile(user, { displayName: name });
       
-      // Crear el perfil de usuario en Firestore (según backend.json)
       const userProfileRef = doc(firestore, 'users', user.uid);
       const profileData = {
         id: user.uid,
