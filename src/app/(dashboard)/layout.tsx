@@ -1,16 +1,23 @@
 "use client";
 
 import { AuthGuard } from "@/components/auth-guard";
-import { useAuth } from "@/context/auth-context";
+import { useAuth, useUser } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { LogOut, LayoutDashboard, User, Settings, Leaf } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { signOut } from "firebase/auth";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  const auth = useAuth();
+  const router = useRouter();
   const pathname = usePathname();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push("/login");
+  };
 
   return (
     <AuthGuard>
@@ -23,7 +30,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <span className="font-bold text-lg text-primary">AgroAlerta</span>
           </div>
-          <Button variant="ghost" size="icon" onClick={logout} className="text-muted-foreground">
+          <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground">
             <LogOut className="w-5 h-5" />
           </Button>
         </header>

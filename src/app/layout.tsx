@@ -1,6 +1,5 @@
 import type {Metadata} from 'next';
 import './globals.css';
-import { AuthProvider } from '@/context/auth-context';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
@@ -23,12 +22,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-slate-100 min-h-screen">
         <FirebaseClientProvider>
-          <AuthProvider>
-            <div className="mobile-container">
-              {children}
-            </div>
-            <Toaster />
-          </AuthProvider>
+          <div className="mobile-container">
+            {children}
+          </div>
+          <Toaster />
         </FirebaseClientProvider>
       </body>
     </html>
