@@ -5,7 +5,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Sprout, Loader2, ChevronRight, Droplets, Search, Check, Leaf, Flower2, TreePine, Shrub, Wheat } from "lucide-react";
+import { Plus, Sprout, Loader2, ChevronRight, Droplets, Search, Check, Leaf, Flower2, TreePine, Shrub, Wheat, Thermometer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -45,7 +45,13 @@ export default function DashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [newCrop, setNewCrop] = useState({ name: "", type: "", icon: "Sprout" });
+  const [newCrop, setNewCrop] = useState({ 
+    name: "", 
+    type: "", 
+    icon: "Sprout",
+    dailyIrrigationGoal: 2,
+    idealTemperature: 24
+  });
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const cropsQuery = useMemoFirebase(() => {
@@ -82,7 +88,8 @@ export default function DashboardPage() {
       type: newCrop.type,
       icon: newCrop.icon,
       generalStatus: "Saludable",
-      dailyIrrigationGoal: 2,
+      dailyIrrigationGoal: Number(newCrop.dailyIrrigationGoal),
+      idealTemperature: Number(newCrop.idealTemperature),
       irrigationsToday: 0,
       createdAt: new Date().toISOString(),
     };
@@ -93,7 +100,13 @@ export default function DashboardPage() {
   };
 
   const resetForm = () => {
-    setNewCrop({ name: "", type: "", icon: "Sprout" });
+    setNewCrop({ 
+      name: "", 
+      type: "", 
+      icon: "Sprout",
+      dailyIrrigationGoal: 2,
+      idealTemperature: 24
+    });
     setSearchQuery("");
     setIsDropdownOpen(false);
   };
@@ -138,7 +151,7 @@ export default function DashboardPage() {
               <Plus className="w-8 h-8" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] overflow-y-auto max-h-[90vh]">
             <DialogHeader>
               <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
                 <Leaf className="w-6 h-6 text-primary" />
@@ -247,6 +260,37 @@ export default function DashboardPage() {
                   </p>
                 )}
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="irrigation">Riegos diarios</Label>
+                  <div className="relative">
+                    <Input 
+                      id="irrigation" 
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={newCrop.dailyIrrigationGoal}
+                      onChange={(e) => setNewCrop({...newCrop, dailyIrrigationGoal: Number(e.target.value)})}
+                      className="h-11 pl-10"
+                    />
+                    <Droplets className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500" />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="temp">Temp. Ideal (°C)</Label>
+                  <div className="relative">
+                    <Input 
+                      id="temp" 
+                      type="number"
+                      value={newCrop.idealTemperature}
+                      onChange={(e) => setNewCrop({...newCrop, idealTemperature: Number(e.target.value)})}
+                      className="h-11 pl-10"
+                    />
+                    <Thermometer className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-500" />
+                  </div>
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button 
@@ -278,9 +322,13 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1 font-medium">
                         <Droplets className="w-3.5 h-3.5 text-blue-500" />
-                        {crop.irrigationsToday}/{crop.dailyIrrigationGoal} riegos
+                        {crop.irrigationsToday}/{crop.dailyIrrigationGoal}
                       </span>
-                      <span className="text-primary font-bold flex items-center gap-1">
+                      <span className="flex items-center gap-1 font-medium">
+                        <Thermometer className="w-3.5 h-3.5 text-orange-500" />
+                        {crop.idealTemperature}°C
+                      </span>
+                      <span className="text-primary font-bold flex items-center gap-1 ml-auto">
                         <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                         {crop.generalStatus}
                       </span>

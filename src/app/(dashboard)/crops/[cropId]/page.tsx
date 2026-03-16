@@ -85,7 +85,7 @@ export default function CropDetailPage() {
             <Thermometer className="w-6 h-6 text-orange-500" />
             <div className="text-center">
               <p className="text-[10px] uppercase font-bold text-orange-600/70">Temp. Ideal</p>
-              <p className="text-xl font-bold">24°C</p>
+              <p className="text-xl font-bold">{crop.idealTemperature || 24}°C</p>
             </div>
           </CardContent>
         </Card>
