@@ -1,0 +1,134 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * CORE PHILOSOPHY
+     * This ruleset enforces a strict user-ownership model designed for a crop management application. 
+     * Security is grounded in a hierarchical data structure where all user-related data is nested 
+     * directly under the user's primary profile document.
+     *
+     * DATA STRUCTURE
+     * All data is organized under the path /users/{userId}. Sub-collections like 'crops', 'notes', 
+     * 'recommendations', and 'chatMessages' are nested within this tree, ensuring that the 
+     * authenticated user's ID is always part of the resource path.
+     *
+     * KEY SECURITY DECISIONS
+     * 1. Path-Based Authorization: We use the {userId} variable from the path to verify ownership, 
+     *    which is more efficient and secure than performing document lookups (get() calls).
+     * 2. Denormalization for Integrity: Every document contains an internal 'userId' field. 
+     *    Rules enforce that this field matches the path and the authenticated user's UID upon 
+     *    creation and remains immutable thereafter.
+     * 3. Prototyping Flexibility: While authorization is strictly enforced (who can access), 
+     *    the specific schema (data types and non-relational fields) is kept flexible to allow 
+     *    for rapid iteration of the app's features.
+     * 4. Robust State Checks: All update and delete operations explicitly verify that the 
+     *    resource exists before allowing the action.
+     */
+
+    // --- Global Helper Functions ---
+
+    /**
+     * @description Checks if the request is made by an authenticated user.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user's UID matches the provided userId.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Combines ownership check with a check for document existence for write operations.
+     */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for the UserProfile entity. Allows users to manage their own profile.
+     * @path /users/{userId}
+     * @allow (create) if auth.uid matches {userId} and data.id matches {userId}.
+     * @deny (update) if trying to change the profile ID.
+     * @principle Self-Creation and Ownership.
+     */
+    match /users/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Rules for the Crop entity. Allows users to manage crops within their own tree.
+       * @path /users/{userId}/crops/{cropId}
+       * @allow (create) if auth.uid matches {userId} and data.userId matches {userId}.
+       * @deny (list) if the requester is not the owner of the path.
+       * @principle Hierarchical ownership and relational integrity.
+       */
+      match /crops/{cropId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+
+        /**
+         * @description Rules for the Note entity.
+         * @path /users/{userId}/crops/{cropId}/notes/{noteId}
+         * @allow (create) if data contains the correct cropId and userId matching the path.
+         * @principle Double-link validation (User and Crop).
+         */
+        match /notes/{noteId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) && request.resource.data.userId == userId && request.resource.data.cropId == cropId;
+          allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId && request.resource.data.cropId == resource.data.cropId;
+          allow delete: if isExistingOwner(userId);
+        }
+
+        /**
+         * @description Rules for the Recommendation entity.
+         * @path /users/{userId}/crops/{cropId}/recommendations/{recommendationId}
+         * @allow (get) if the user owns the parent tree.
+         * @principle Resource-specific access under owner tree.
+         */
+        match /recommendations/{recommendationId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) && request.resource.data.userId == userId && request.resource.data.cropId == cropId;
+          allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId && request.resource.data.cropId == resource.data.cropId;
+          allow delete: if isExistingOwner(userId);
+        }
+
+        /**
+         * @description Rules for the ChatMessage entity.
+         * @path /users/{userId}/crops/{cropId}/chatMessages/{chatMessageId}
+         * @allow (create) for user messages or system responses within the user's path.
+         * @principle Secure messaging scoped to a specific crop.
+         */
+        match /chatMessages/{chatMessageId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) && request.resource.data.userId == userId && request.resource.data.cropId == cropId;
+          allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId && request.resource.data.cropId == resource.data.cropId;
+          allow delete: if isExistingOwner(userId);
+        }
+
+        /**
+         * @description Rules for the IrrigationLog entity.
+         * @path /users/{userId}/crops/{cropId}/irrigationLogs/{irrigationLogId}
+         * @allow (list) for the owner to see all logs for a specific crop.
+         * @principle Immutable relational links for event logs.
+         */
+        match /irrigationLogs/{irrigationLogId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) && request.resource.data.userId == userId && request.resource.data.cropId == cropId;
+          allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId && request.resource.data.cropId == resource.data.cropId;
+          allow delete: if isExistingOwner(userId);
+        }
+      }
+    }
+  }
+}
