@@ -45,13 +45,16 @@ export default function DashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  // Usamos strings para los campos numéricos para permitir borrar el contenido (input vacío)
   const [newCrop, setNewCrop] = useState({ 
     name: "", 
     type: "", 
     icon: "Sprout",
-    dailyIrrigationGoal: 2,
-    idealTemperature: 24
+    dailyIrrigationGoal: "2",
+    idealTemperature: "24"
   });
+  
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const cropsQuery = useMemoFirebase(() => {
@@ -82,14 +85,16 @@ export default function DashboardPage() {
     if (!user || !firestore || !newCrop.name || !newCrop.type) return;
 
     const cropsRef = collection(firestore, "users", user.uid, "crops");
+    
+    // Convertimos a número antes de guardar, usando valores por defecto si están vacíos
     const cropData = {
       userId: user.uid,
       name: newCrop.name,
       type: newCrop.type,
       icon: newCrop.icon,
       generalStatus: "Saludable",
-      dailyIrrigationGoal: Number(newCrop.dailyIrrigationGoal),
-      idealTemperature: Number(newCrop.idealTemperature),
+      dailyIrrigationGoal: Number(newCrop.dailyIrrigationGoal) || 1,
+      idealTemperature: Number(newCrop.idealTemperature) || 24,
       irrigationsToday: 0,
       createdAt: new Date().toISOString(),
     };
@@ -104,8 +109,8 @@ export default function DashboardPage() {
       name: "", 
       type: "", 
       icon: "Sprout",
-      dailyIrrigationGoal: 2,
-      idealTemperature: 24
+      dailyIrrigationGoal: "2",
+      idealTemperature: "24"
     });
     setSearchQuery("");
     setIsDropdownOpen(false);
@@ -253,12 +258,6 @@ export default function DashboardPage() {
                     </ScrollArea>
                   </div>
                 )}
-                
-                {!newCrop.type && searchQuery && !isDropdownOpen && (
-                  <p className="text-[10px] text-destructive font-medium px-1">
-                    Selecciona una opción válida de la lista.
-                  </p>
-                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -271,7 +270,7 @@ export default function DashboardPage() {
                       min="1"
                       max="10"
                       value={newCrop.dailyIrrigationGoal}
-                      onChange={(e) => setNewCrop({...newCrop, dailyIrrigationGoal: Number(e.target.value)})}
+                      onChange={(e) => setNewCrop({...newCrop, dailyIrrigationGoal: e.target.value})}
                       className="h-11 pl-10"
                     />
                     <Droplets className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500" />
@@ -284,7 +283,7 @@ export default function DashboardPage() {
                       id="temp" 
                       type="number"
                       value={newCrop.idealTemperature}
-                      onChange={(e) => setNewCrop({...newCrop, idealTemperature: Number(e.target.value)})}
+                      onChange={(e) => setNewCrop({...newCrop, idealTemperature: e.target.value})}
                       className="h-11 pl-10"
                     />
                     <Thermometer className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-500" />
