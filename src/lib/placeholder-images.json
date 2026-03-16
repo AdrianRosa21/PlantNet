@@ -1,3 +1,16 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "1",
+      "description": "Plantación de maíz verde saludable",
+      "imageUrl": "https://picsum.photos/seed/maiz/600/400",
+      "imageHint": "corn field"
+    },
+    {
+      "id": "2",
+      "description": "Hojas de tomate con manchas",
+      "imageUrl": "https://picsum.photos/seed/tomate/600/400",
+      "imageHint": "tomato leaves"
+    }
+  ]
 }
