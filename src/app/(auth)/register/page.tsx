@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
+import { useAuth as useFirebaseContext } from "@/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus } from "lucide-react";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -19,6 +22,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { auth, firestore } = useFirebaseContext();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,17 +30,38 @@ export default function RegisterPage() {
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName: name });
+      const user = userCredential.user;
+
+      await updateProfile(user, { displayName: name });
       
+      // Crear el perfil de usuario en Firestore (según backend.json)
+      const userProfileRef = doc(firestore, 'users', user.uid);
+      const profileData = {
+        id: user.uid,
+        email: email,
+        createdAt: new Date().toISOString(),
+      };
+
+      setDoc(userProfileRef, profileData)
+        .catch(async (error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: userProfileRef.path,
+            operation: 'create',
+            requestResourceData: profileData,
+          }));
+        });
+
       toast({
         title: "Cuenta creada",
         description: "Bienvenido a AgroAlerta IA.",
       });
       router.push("/dashboard");
     } catch (error: any) {
+      console.error(error);
       let message = "No se pudo crear la cuenta. Inténtalo de nuevo.";
       if (error.code === "auth/email-already-in-use") message = "Este correo ya está registrado.";
-      if (error.code === "auth/weak-password") message = "La contraseña es muy débil.";
+      if (error.code === "auth/weak-password") message = "La contraseña debe tener al menos 6 caracteres.";
+      if (error.code === "auth/invalid-email") message = "El correo electrónico no es válido.";
       
       toast({
         variant: "destructive",
@@ -88,6 +113,7 @@ export default function RegisterPage() {
               <Input 
                 id="password" 
                 type="password" 
+                placeholder="Mínimo 6 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

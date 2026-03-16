@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/auth-context';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'AgroAlerta IA - Asistente Agrícola',
@@ -21,12 +22,14 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-slate-100 min-h-screen">
-        <AuthProvider>
-          <div className="mobile-container">
-            {children}
-          </div>
-          <Toaster />
-        </AuthProvider>
+        <FirebaseClientProvider>
+          <AuthProvider>
+            <div className="mobile-container">
+              {children}
+            </div>
+            <Toaster />
+          </AuthProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );
