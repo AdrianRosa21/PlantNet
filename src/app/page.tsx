@@ -1,22 +1,28 @@
 "use client";
 
-import { useAuth } from "@/context/auth-context";
+import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+/**
+ * Pantalla de inicio de la aplicación.
+ * Redirige automáticamente al panel si el usuario está autenticado,
+ * o a la pantalla de inicio de sesión en caso contrario.
+ */
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
+    // Solo redirigimos cuando Firebase ha terminado de verificar el estado inicial
+    if (!isUserLoading) {
       if (user) {
         router.push("/dashboard");
       } else {
         router.push("/login");
       }
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8 text-center bg-white">
@@ -26,7 +32,7 @@ export default function Home() {
         </div>
       </div>
       <h1 className="text-2xl font-bold text-primary mb-2">AgroAlerta IA</h1>
-      <p className="text-muted-foreground animate-pulse">Cargando...</p>
+      <p className="text-muted-foreground animate-pulse">Iniciando sistema agrícola...</p>
     </div>
   );
 }
