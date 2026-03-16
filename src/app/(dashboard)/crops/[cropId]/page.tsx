@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -6,8 +7,17 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Droplets, Thermometer, Wind, Sprout, Loader2 } from "lucide-react";
+import { ArrowLeft, Droplets, Thermometer, Wind, Sprout, Loader2, Leaf, Flower2, TreePine, Shrub, Wheat } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+
+const CROP_ICONS = [
+  { name: "Sprout", icon: Sprout },
+  { name: "Leaf", icon: Leaf },
+  { name: "Flower2", icon: Flower2 },
+  { name: "TreePine", icon: TreePine },
+  { name: "Shrub", icon: Shrub },
+  { name: "Wheat", icon: Wheat },
+];
 
 export default function CropDetailPage() {
   const { cropId } = useParams();
@@ -21,6 +31,12 @@ export default function CropDetailPage() {
   }, [firestore, user, cropId]);
 
   const { data: crop, isLoading } = useDoc(cropRef);
+
+  const getCropIcon = (iconName: string) => {
+    const iconObj = CROP_ICONS.find(i => i.name === iconName) || CROP_ICONS[0];
+    const IconComponent = iconObj.icon;
+    return <IconComponent className="w-5 h-5 text-primary" />;
+  };
 
   if (isLoading) {
     return (
@@ -78,7 +94,7 @@ export default function CropDetailPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Sprout className="w-5 h-5 text-primary" />
+            {getCropIcon(crop.icon)}
             Estado del Cultivo
           </CardTitle>
         </CardHeader>

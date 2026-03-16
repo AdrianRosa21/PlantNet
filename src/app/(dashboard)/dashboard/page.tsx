@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Sprout, Loader2, ChevronRight, Droplets, Search, Check, Leaf } from "lucide-react";
+import { Plus, Sprout, Loader2, ChevronRight, Droplets, Search, Check, Leaf, Flower2, TreePine, Shrub, Wheat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -29,13 +30,22 @@ const PLANT_TYPES = [
   "Fresa"
 ];
 
+const CROP_ICONS = [
+  { name: "Sprout", icon: Sprout },
+  { name: "Leaf", icon: Leaf },
+  { name: "Flower2", icon: Flower2 },
+  { name: "TreePine", icon: TreePine },
+  { name: "Shrub", icon: Shrub },
+  { name: "Wheat", icon: Wheat },
+];
+
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [newCrop, setNewCrop] = useState({ name: "", type: "" });
+  const [newCrop, setNewCrop] = useState({ name: "", type: "", icon: "Sprout" });
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const cropsQuery = useMemoFirebase(() => {
@@ -70,6 +80,7 @@ export default function DashboardPage() {
       userId: user.uid,
       name: newCrop.name,
       type: newCrop.type,
+      icon: newCrop.icon,
       generalStatus: "Saludable",
       dailyIrrigationGoal: 2,
       irrigationsToday: 0,
@@ -82,7 +93,7 @@ export default function DashboardPage() {
   };
 
   const resetForm = () => {
-    setNewCrop({ name: "", type: "" });
+    setNewCrop({ name: "", type: "", icon: "Sprout" });
     setSearchQuery("");
     setIsDropdownOpen(false);
   };
@@ -91,6 +102,12 @@ export default function DashboardPage() {
     setNewCrop({ ...newCrop, type });
     setSearchQuery(type);
     setIsDropdownOpen(false);
+  };
+
+  const getCropIcon = (iconName: string) => {
+    const iconObj = CROP_ICONS.find(i => i.name === iconName) || CROP_ICONS[0];
+    const IconComponent = iconObj.icon;
+    return <IconComponent className="w-7 h-7 text-primary" />;
   };
 
   if (isLoading) {
@@ -132,6 +149,27 @@ export default function DashboardPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Selecciona un icono</Label>
+                <div className="grid grid-cols-6 gap-2">
+                  {CROP_ICONS.map((item) => (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => setNewCrop({ ...newCrop, icon: item.name })}
+                      className={cn(
+                        "flex items-center justify-center h-10 rounded-lg border-2 transition-all",
+                        newCrop.icon === item.name 
+                          ? "border-primary bg-primary/10 text-primary" 
+                          : "border-transparent bg-muted hover:bg-muted/80"
+                      )}
+                    >
+                      <item.icon className="w-5 h-5" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid gap-2">
                 <Label htmlFor="name">Nombre del cultivo</Label>
                 <Input 
@@ -230,7 +268,7 @@ export default function DashboardPage() {
               <Card className="overflow-hidden hover:border-primary/50 transition-all group active:scale-[0.98] border-none shadow-sm bg-white">
                 <CardContent className="p-4 flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                    <Sprout className="w-7 h-7 text-primary" />
+                    {getCropIcon(crop.icon)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
