@@ -1,23 +1,42 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from "@/firebase";
-import { collection, serverTimestamp } from "firebase/firestore";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { PlusCircle, Sprout, Loader2, ChevronRight, Droplets } from "lucide-react";
+import { collection } from "firebase/firestore";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { PlusCircle, Sprout, Loader2, ChevronRight, Droplets, Search, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
+const PLANT_TYPES = [
+  "Cactus",
+  "Suculentas",
+  "Árboles",
+  "Plantas subterráneas",
+  "Plantas trepadoras",
+  "Plantas acuáticas",
+  "Plantas ornamentales",
+  "Plantas medicinales",
+  "Tomate",
+  "Lechuga",
+  "Chile",
+  "Fresa"
+];
 
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newCrop, setNewCrop] = useState({ name: "", type: "Tomate" });
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [newCrop, setNewCrop] = useState({ name: "", type: "" });
 
   const cropsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -26,8 +45,14 @@ export default function DashboardPage() {
 
   const { data: crops, isLoading } = useCollection(cropsQuery);
 
+  const filteredPlantTypes = useMemo(() => {
+    return PLANT_TYPES.filter((type) =>
+      type.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
   const handleCreateCrop = () => {
-    if (!user || !firestore || !newCrop.name) return;
+    if (!user || !firestore || !newCrop.name || !newCrop.type) return;
 
     const cropsRef = collection(firestore, "users", user.uid, "crops");
     const cropData = {
@@ -42,7 +67,8 @@ export default function DashboardPage() {
 
     addDocumentNonBlocking(cropsRef, cropData);
     setIsDialogOpen(false);
-    setNewCrop({ name: "", type: "Tomate" });
+    setNewCrop({ name: "", type: "" });
+    setSearchQuery("");
   };
 
   if (isLoading) {
@@ -61,7 +87,13 @@ export default function DashboardPage() {
           <p className="text-muted-foreground text-sm">Gestiona tus cultivos inteligentes.</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setNewCrop({ name: "", type: "" });
+            setSearchQuery("");
+          }
+        }}>
           <DialogTrigger asChild>
             <Button size="icon" className="rounded-full shadow-lg">
               <PlusCircle className="w-6 h-6" />
@@ -85,22 +117,78 @@ export default function DashboardPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="type">Tipo de planta</Label>
-                <Select value={newCrop.type} onValueChange={(value) => setNewCrop({...newCrop, type: value})}>
-                  <SelectTrigger id="type">
-                    <SelectValue placeholder="Selecciona un tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Tomate">Tomate</SelectItem>
-                    <SelectItem value="Lechuga">Lechuga</SelectItem>
-                    <SelectItem value="Chile">Chile</SelectItem>
-                    <SelectItem value="Fresa">Fresa</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Tipo de planta</Label>
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={isPopoverOpen}
+                      className="w-full justify-between h-11 font-normal"
+                    >
+                      {newCrop.type || "Selecciona o busca un tipo..."}
+                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                    <div className="flex items-center border-b px-3">
+                      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                      <Input
+                        placeholder="Buscar tipo..."
+                        className="h-10 border-0 focus-visible:ring-0 px-0"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <ScrollArea className="h-60">
+                      <div className="p-1">
+                        {filteredPlantTypes.length === 0 ? (
+                          <p className="p-4 text-center text-sm text-muted-foreground">
+                            No se encontraron resultados.
+                          </p>
+                        ) : (
+                          filteredPlantTypes.map((type) => (
+                            <div
+                              key={type}
+                              className={cn(
+                                "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors",
+                                newCrop.type === type && "bg-accent/50 text-accent-foreground"
+                              )}
+                              onClick={() => {
+                                setNewCrop({ ...newCrop, type });
+                                setIsPopoverOpen(false);
+                                setSearchQuery("");
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  newCrop.type === type ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {type}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </PopoverContent>
+                </Popover>
+                {!newCrop.type && searchQuery && filteredPlantTypes.length === 0 && (
+                  <p className="text-[10px] text-destructive px-1">
+                    Debes seleccionar una opción válida de la lista.
+                  </p>
+                )}
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleCreateCrop} disabled={!newCrop.name}>Guardar Cultivo</Button>
+              <Button 
+                onClick={handleCreateCrop} 
+                className="w-full"
+                disabled={!newCrop.name || !newCrop.type}
+              >
+                Guardar Cultivo
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
