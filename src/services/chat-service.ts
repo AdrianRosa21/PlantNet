@@ -29,7 +29,6 @@ export interface ChatMessageData {
 
 /**
  * Servicio para gestionar el chat de cultivos.
- * Esta capa está preparada para integrar Gemini en el futuro.
  */
 export const ChatService = {
   /**
@@ -50,12 +49,15 @@ export const ChatService = {
       try {
         const fileExtension = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExtension}`;
-        const storageRef = ref(storage, `users/${userId}/crops/${cropId}/chats/${fileName}`);
+        const storagePath = `users/${userId}/crops/${cropId}/chats/${fileName}`;
+        const storageRef = ref(storage, storagePath);
+        
+        // Iniciamos la subida
         const snapshot = await uploadBytes(storageRef, imageFile);
         imageUrl = await getDownloadURL(snapshot.ref);
       } catch (error) {
         console.error("Storage upload error:", error);
-        throw error;
+        throw new Error("No se pudo subir la imagen. Verifica tu conexión.");
       }
     }
 
@@ -63,26 +65,29 @@ export const ChatService = {
     const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
     const messageId = doc(messagesRef).id;
     
-    // Aseguramos que el objeto cumpla exactamente con el esquema del backend.json
-    const userMessage: ChatMessageData = {
+    // Construimos el objeto evitando campos 'undefined' para Firestore
+    const userMessage: any = {
       id: messageId,
       userId: userId,
       cropId: cropId,
       messageType: 'user',
-      text: text || (imageUrl ? "Imagen adjunta" : "Analizando..."),
-      imageUrl: imageUrl || undefined,
+      text: text.trim() || (imageUrl ? "Imagen adjunta" : "Analizando..."),
       timestamp: serverTimestamp(),
       status: 'sent'
     };
 
+    if (imageUrl) {
+      userMessage.imageUrl = imageUrl;
+    }
+
     try {
       const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
-      // Usamos setDoc para asegurar que el ID generado esté en el cuerpo del documento
       await setDoc(messageDocRef, userMessage);
       
       // Simular respuesta después del guardado exitoso
       this.generateSimulatedResponse(db, userId, cropId);
     } catch (error) {
+      console.error("Firestore message error:", error);
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: `users/${userId}/crops/${cropId}/chatMessages/${messageId}`,
         operation: 'create',
@@ -98,7 +103,6 @@ export const ChatService = {
   async generateSimulatedResponse(db: Firestore, userId: string, cropId: string) {
     const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
     
-    // Simular retraso de procesamiento
     setTimeout(async () => {
       const messageId = doc(messagesRef).id;
       const simulatedText = `**Análisis de Situación:**
@@ -122,11 +126,7 @@ export const ChatService = {
         const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
         await setDoc(messageDocRef, systemMessage);
       } catch (error) {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: `users/${userId}/crops/${cropId}/chatMessages/${messageId}`,
-          operation: 'create',
-          requestResourceData: systemMessage
-        }));
+        console.error("Error saving simulated response:", error);
       }
     }, 2000);
   }
