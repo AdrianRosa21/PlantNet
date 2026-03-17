@@ -306,26 +306,28 @@ export default function CropDetailPage() {
         <Card className="rounded-2xl border-none shadow-sm overflow-hidden bg-white">
           <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
             <div className="relative w-16 h-20">
-              {/* SVG de Gota */}
+              {/* SVG de Gota Refinado */}
               <svg viewBox="0 0 30 42" className="w-full h-full drop-shadow-md">
+                {/* Fondo de la gota (vacío) */}
                 <path
-                  d="M15 3 Q15 3 25 18 A10 10 0 1 1 5 18 Q15 3 15 3 Z"
+                  d="M15 2 C15 2 27 18 27 28 A12 12 0 0 1 3 28 C3 18 15 2 15 2 Z"
                   fill="#e2e8f0"
                 />
-                <mask id="water-mask">
-                  <path d="M15 3 Q15 3 25 18 A10 10 0 1 1 5 18 Q15 3 15 3 Z" fill="white" />
+                <mask id="water-mask-v2">
+                  <path d="M15 2 C15 2 27 18 27 28 A12 12 0 0 1 3 28 C3 18 15 2 15 2 Z" fill="white" />
                 </mask>
+                {/* Relleno de agua progresivo */}
                 <rect
                   x="0"
                   y={42 - (42 * irrigationData.percentage / 100)}
                   width="30"
                   height="42"
                   fill="#3b82f6"
-                  mask="url(#water-mask)"
+                  mask="url(#water-mask-v2)"
                   className="transition-all duration-700 ease-in-out"
                 />
               </svg>
-              <div className="absolute inset-0 flex items-center justify-center mt-4">
+              <div className="absolute inset-0 flex items-center justify-center mt-6">
                 <span className="text-xs font-bold text-slate-700">{crop.irrigationsToday}/{crop.dailyIrrigationGoal}</span>
               </div>
             </div>
