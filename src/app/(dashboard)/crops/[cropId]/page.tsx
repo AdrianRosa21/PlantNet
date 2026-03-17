@@ -59,13 +59,14 @@ export default function CropDetailPage() {
   useEffect(() => {
     if (crop && isEditDialogOpen) {
       setEditForm({
-        name: crop.name,
-        type: crop.type,
+        name: crop.name || "",
+        type: crop.type || "",
         icon: crop.icon || "Sprout",
-        dailyIrrigationGoal: crop.dailyIrrigationGoal.toString(),
-        idealTemperature: crop.idealTemperature.toString()
+        // Añadimos seguridad con ?? para evitar errores de toString() si el campo es undefined
+        dailyIrrigationGoal: (crop.dailyIrrigationGoal ?? 2).toString(),
+        idealTemperature: (crop.idealTemperature ?? 24).toString()
       });
-      setSearchQuery(crop.type);
+      setSearchQuery(crop.type || "");
     }
   }, [crop, isEditDialogOpen]);
 
@@ -309,7 +310,7 @@ export default function CropDetailPage() {
             <Droplets className="w-6 h-6 text-blue-500" />
             <div className="text-center">
               <p className="text-[10px] uppercase font-bold text-blue-600/70">Riego Hoy</p>
-              <p className="text-xl font-bold">{crop.irrigationsToday}/{crop.dailyIrrigationGoal}</p>
+              <p className="text-xl font-bold">{crop.irrigationsToday}/{crop.dailyIrrigationGoal ?? 1}</p>
             </div>
           </CardContent>
         </Card>
@@ -318,7 +319,7 @@ export default function CropDetailPage() {
             <Thermometer className="w-6 h-6 text-orange-500" />
             <div className="text-center">
               <p className="text-[10px] uppercase font-bold text-orange-600/70">Temp. Ideal</p>
-              <p className="text-xl font-bold">{crop.idealTemperature}°C</p>
+              <p className="text-xl font-bold">{crop.idealTemperature ?? 24}°C</p>
             </div>
           </CardContent>
         </Card>
@@ -327,13 +328,13 @@ export default function CropDetailPage() {
       <Card className="rounded-2xl shadow-sm border-none bg-white">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            {getCropIcon(crop.icon, "w-6 h-6 text-primary")}
+            {getCropIcon(crop.icon || "Sprout", "w-6 h-6 text-primary")}
             Estado Actual
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Tu {crop.type.toLowerCase()} se encuentra en estado <span className="text-primary font-bold">{crop.generalStatus.toLowerCase()}</span>. 
+            Tu {(crop.type || "planta").toLowerCase()} se encuentra en estado <span className="text-primary font-bold">{(crop.generalStatus || "Saludable").toLowerCase()}</span>. 
             El sistema está monitoreando las condiciones ambientales para asegurar el crecimiento óptimo.
           </p>
           <Button className="w-full h-12 rounded-xl text-base font-semibold shadow-lg shadow-primary/10">
