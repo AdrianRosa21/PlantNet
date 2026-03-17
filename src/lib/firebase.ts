@@ -1,12 +1,3 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
-import { firebaseConfig } from "@/firebase/config";
-
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-export { auth, db, storage };
+// Este archivo ha sido unificado con src/firebase/index.ts para evitar conflictos de inicialización.
+export { initializeFirebase as auth, initializeFirebase as db, initializeFirebase as storage } from "@/firebase";
+// Nota: Es mejor usar directamente useFirebase() o las utilidades en src/firebase/
