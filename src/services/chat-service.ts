@@ -46,18 +46,16 @@ export const ChatService = {
       try {
         const timestamp = Date.now();
         const fileName = `${timestamp}_${imageFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-        // Ruta simplificada para evitar problemas de permisos anidados
+        // Ruta simplificada para evitar problemas de permisos anidados en Storage
         const storagePath = `chats/${userId}/${cropId}/${fileName}`;
         const storageRef = ref(storage, storagePath);
         
-        console.log("Iniciando subida a:", storagePath);
         const snapshot = await uploadBytes(storageRef, imageFile);
         imageUrl = await getDownloadURL(snapshot.ref);
-        console.log("Imagen subida con éxito:", imageUrl);
       } catch (error: any) {
         console.error("Error crítico en Storage:", error);
         if (error.code === 'storage/retry-limit-exceeded') {
-          throw new Error("Error de red: No se pudo conectar con el servidor de imágenes. Revisa tu conexión.");
+          throw new Error("Error de red: No se pudo conectar con el servidor de imágenes. Revisa el Bucket o tu conexión.");
         }
         throw new Error("Error al subir la imagen: " + (error.message || "Fallo desconocido"));
       }
