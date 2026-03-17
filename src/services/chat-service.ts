@@ -48,7 +48,9 @@ export const ChatService = {
     // 1. Subir imagen si existe
     if (imageFile) {
       try {
-        const storageRef = ref(storage, `users/${userId}/crops/${cropId}/chats/${Date.now()}_${imageFile.name}`);
+        const fileExtension = imageFile.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExtension}`;
+        const storageRef = ref(storage, `users/${userId}/crops/${cropId}/chats/${fileName}`);
         const snapshot = await uploadBytes(storageRef, imageFile);
         imageUrl = await getDownloadURL(snapshot.ref);
       } catch (error) {
@@ -66,7 +68,7 @@ export const ChatService = {
       userId,
       cropId,
       messageType: 'user',
-      text,
+      text: text || (imageUrl ? "Imagen adjunta" : ""),
       imageUrl: imageUrl || undefined,
       timestamp: serverTimestamp(),
       status: 'sent'
@@ -75,6 +77,7 @@ export const ChatService = {
     try {
       const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
       await setDoc(messageDocRef, userMessage);
+      
       // Simular respuesta después del guardado exitoso
       this.generateSimulatedResponse(db, userId, cropId);
     } catch (error) {
