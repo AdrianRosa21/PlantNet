@@ -10,9 +10,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Reglas para el perfil de usuario y sus datos anidados
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
+      // Reglas para cultivos y sus subcolecciones
       match /crops/{cropId} {
         allow read, write: if isOwner(userId);
 
@@ -25,7 +27,7 @@ service cloud.firestore {
         }
 
         match /chatMessages/{chatMessageId} {
-          // Simplificamos al máximo para evitar errores de permisos
+          // Simplificamos al máximo: si eres dueño de la ruta /users/{userId}, puedes leer/escribir mensajes
           allow read, write: if isOwner(userId);
         }
 

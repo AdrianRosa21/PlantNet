@@ -27,10 +27,11 @@ export interface ChatMessageData {
   status: 'sent' | 'processing' | 'responded';
 }
 
+/**
+ * Servicio de Chat para AgroAlerta IA.
+ * Maneja el envío de mensajes, subida de imágenes y respuestas simuladas.
+ */
 export const ChatService = {
-  /**
-   * Envía un mensaje. Maneja la subida a Storage y el guardado en Firestore.
-   */
   async sendMessage(
     db: Firestore,
     storage: FirebaseStorage,
@@ -46,18 +47,15 @@ export const ChatService = {
       try {
         const timestamp = Date.now();
         const fileName = `${timestamp}_${imageFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-        // Ruta simplificada para evitar problemas de permisos anidados en Storage
-        const storagePath = `chats/${userId}/${cropId}/${fileName}`;
+        // Usamos una ruta de storage simplificada
+        const storagePath = `users/${userId}/crops/${cropId}/${fileName}`;
         const storageRef = ref(storage, storagePath);
         
         const snapshot = await uploadBytes(storageRef, imageFile);
         imageUrl = await getDownloadURL(snapshot.ref);
       } catch (error: any) {
         console.error("Error crítico en Storage:", error);
-        if (error.code === 'storage/retry-limit-exceeded') {
-          throw new Error("Error de red: No se pudo conectar con el servidor de imágenes. Revisa el Bucket o tu conexión.");
-        }
-        throw new Error("Error al subir la imagen: " + (error.message || "Fallo desconocido"));
+        throw new Error("Error al subir la imagen. Verifica tu conexión.");
       }
     }
 
@@ -81,9 +79,10 @@ export const ChatService = {
 
     try {
       const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
+      // Usamos setDoc para asegurar que el ID del documento coincida con el campo 'id'
       await setDoc(messageDocRef, userMessage);
       
-      // Respuesta simulada
+      // Respuesta simulada (disparada sin esperar)
       this.generateSimulatedResponse(db, userId, cropId);
     } catch (error: any) {
       console.error("Error en Firestore al guardar mensaje:", error);
@@ -97,6 +96,7 @@ export const ChatService = {
   },
 
   async generateSimulatedResponse(db: Firestore, userId: string, cropId: string) {
+    // Simulamos un retraso de procesamiento
     setTimeout(async () => {
       try {
         const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
@@ -107,7 +107,7 @@ export const ChatService = {
           userId: userId,
           cropId: cropId,
           messageType: 'system',
-          text: `**Análisis de AgroAlerta:**\n\n- **Estado:** Basado en la información recibida, parece un desajuste de riego.\n- **Urgencia:** Media.\n- **Acción:** Asegúrate de que el suelo drene bien y evita regar en las horas de sol intenso.\n\n*Nota: Esta es una orientación inicial simulada.*`,
+          text: `**Análisis de AgroAlerta:**\n\n- **Posible Problema:** Basado en la información recibida, detecto un posible desbalance hídrico o estrés ambiental.\n- **Urgencia:** Media.\n- **Acción sugerida:** Revisa la humedad del suelo a 5cm de profundidad. Si está muy seco, realiza un riego ligero.\n\n*Nota: Esta es una orientación inicial simulada.*`,
           timestamp: serverTimestamp(),
           status: 'responded'
         };
@@ -117,6 +117,6 @@ export const ChatService = {
       } catch (e) {
         console.error("Error en respuesta simulada:", e);
       }
-    }, 2000);
+    }, 2500);
   }
 };
