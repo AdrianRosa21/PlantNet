@@ -76,6 +76,7 @@ export const ChatService = {
 
     try {
       const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
+      // Usamos setDoc para asegurar que el ID generado esté en el cuerpo del documento
       await setDoc(messageDocRef, userMessage);
       
       // Simular respuesta después del guardado exitoso

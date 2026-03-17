@@ -52,8 +52,8 @@ service cloud.firestore {
         }
 
         match /chatMessages/{chatMessageId} {
+          // Refreshed rules for chat messages synchronization
           allow get, list: if isOwner(userId);
-          // Explicit check for ownership and relational integrity
           allow create: if isOwner(userId) 
             && request.resource.data.userId == userId 
             && request.resource.data.cropId == cropId;
