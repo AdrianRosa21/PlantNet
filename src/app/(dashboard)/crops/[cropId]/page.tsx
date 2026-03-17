@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { 
   useUser, 
   useFirestore, 
+  useStorage,
   useDoc, 
   useCollection,
   useMemoFirebase, 
@@ -12,8 +13,7 @@ import {
   deleteDocumentNonBlocking,
   addDocumentNonBlocking
 } from "@/firebase";
-import { doc, collection, query, orderBy, limit } from "firebase/firestore";
-import { storage } from "@/lib/firebase"; // Importamos storage para el chat
+import { doc, collection, query, orderBy } from "firebase/firestore";
 import { ChatService } from "@/services/chat-service";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -91,6 +91,7 @@ export default function CropDetailPage() {
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
+  const storage = useStorage();
   const { toast } = useToast();
 
   const cropRef = useMemoFirebase(() => {
@@ -226,7 +227,8 @@ export default function CropDetailPage() {
       setChatInput("");
       setChatImage(null);
       setImagePreview(null);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error sending message:", error);
       toast({
         variant: "destructive",
         title: "Error al enviar",
@@ -302,7 +304,7 @@ export default function CropDetailPage() {
         </Badge>
       </div>
 
-      {/* CHAT IA SECTION (Reemplazando el placeholder de Diagnóstico IA) */}
+      {/* CHAT IA SECTION */}
       <Card className="rounded-2xl border-none shadow-sm bg-white overflow-hidden">
         <CardHeader className="pb-2 bg-primary/5 flex flex-row items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2 text-primary">
@@ -347,7 +349,6 @@ export default function CropDetailPage() {
             </div>
           </ScrollArea>
 
-          {/* Chat Input Area */}
           <div className="p-3 bg-white border-t border-slate-100 space-y-3">
             {imagePreview && (
               <div className="relative inline-block">

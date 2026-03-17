@@ -12,6 +12,8 @@ import {
   getDownloadURL, 
   FirebaseStorage 
 } from 'firebase/storage';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export interface ChatMessageData {
   userId: string;
@@ -43,9 +45,14 @@ export const ChatService = {
 
     // 1. Subir imagen si existe
     if (imageFile) {
-      const storageRef = ref(storage, `users/${userId}/crops/${cropId}/chats/${Date.now()}_${imageFile.name}`);
-      const snapshot = await uploadBytes(storageRef, imageFile);
-      imageUrl = await getDownloadURL(snapshot.ref);
+      try {
+        const storageRef = ref(storage, `users/${userId}/crops/${cropId}/chats/${Date.now()}_${imageFile.name}`);
+        const snapshot = await uploadBytes(storageRef, imageFile);
+        imageUrl = await getDownloadURL(snapshot.ref);
+      } catch (error) {
+        console.error("Storage upload error:", error);
+        throw error;
+      }
     }
 
     // 2. Guardar mensaje del usuario
@@ -60,10 +67,18 @@ export const ChatService = {
       status: 'sent'
     };
 
-    await addDoc(messagesRef, userMessage);
-
-    // 3. Simular procesamiento y respuesta (ESTO SERÁ REEMPLAZADO POR IA REAL)
-    this.generateSimulatedResponse(db, userId, cropId);
+    try {
+      await addDoc(messagesRef, userMessage);
+      // Simular respuesta después del guardado exitoso
+      this.generateSimulatedResponse(db, userId, cropId);
+    } catch (error) {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: messagesRef.path,
+        operation: 'create',
+        requestResourceData: userMessage
+      }));
+      throw error;
+    }
   },
 
   /**
@@ -90,7 +105,15 @@ export const ChatService = {
         status: 'responded'
       };
 
-      await addDoc(messagesRef, systemMessage);
+      try {
+        await addDoc(messagesRef, systemMessage);
+      } catch (error) {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: messagesRef.path,
+          operation: 'create',
+          requestResourceData: systemMessage
+        }));
+      }
     }, 2000);
   }
 };
