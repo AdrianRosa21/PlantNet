@@ -7,14 +7,16 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocki
 import { doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Droplets, Thermometer, Sprout, Loader2, Leaf, Flower2, TreePine, Shrub, Wheat, Pencil, Trash2, Check, Search } from "lucide-react";
+import { ArrowLeft, Droplets, Thermometer, Sprout, Loader2, Leaf, Flower2, TreePine, Shrub, Wheat, Pencil, Trash2, Check, Search, AlertTriangle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const PLANT_TYPES = [
   "Cactus", "Suculentas", "Árboles", "Plantas subterráneas", "Plantas trepadoras", "Plantas acuáticas", "Plantas ornamentales", "Plantas medicinales", "Tomate", "Lechuga", "Chile", "Fresa"
@@ -29,11 +31,33 @@ const CROP_ICONS = [
   { name: "Wheat", icon: Wheat },
 ];
 
+const NEED_WATER_MESSAGES = [
+  "¡Tu planta tiene sed!",
+  "Un poco de agua le vendría bien.",
+  "¡Hora de hidratar!",
+  "¡No te olvides de regar!",
+  "¿Ya le diste de beber?",
+  "El suelo se ve algo seco.",
+  "¡Un traguito de agua, por favor!",
+  "Mantén la humedad ideal.",
+  "Agua es vida para tu brote.",
+  "¡Es momento de cuidar tus raíces!"
+];
+
+const OVERWATER_MESSAGES = [
+  "¡CUIDADO! Estás regando de más.",
+  "¡DETENTE! Podrías ahogar a tu planta. 🛑",
+  "Riegos en exceso detectados.",
+  "Demasiada agua puede ser mala.",
+  "Tu planta ya no puede beber más."
+];
+
 export default function CropDetailPage() {
   const { cropId } = useParams();
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
 
   const cropRef = useMemoFirebase(() => {
     if (!firestore || !user || !cropId) return null;
@@ -62,7 +86,6 @@ export default function CropDetailPage() {
         name: crop.name || "",
         type: crop.type || "",
         icon: crop.icon || "Sprout",
-        // Añadimos seguridad con ?? para evitar errores de toString() si el campo es undefined
         dailyIrrigationGoal: (crop.dailyIrrigationGoal ?? 2).toString(),
         idealTemperature: (crop.idealTemperature ?? 24).toString()
       });
@@ -82,16 +105,13 @@ export default function CropDetailPage() {
 
   const handleUpdateCrop = () => {
     if (!cropRef || !editForm.name || !editForm.type) return;
-
-    const updatedData = {
+    updateDocumentNonBlocking(cropRef, {
       name: editForm.name,
       type: editForm.type,
       icon: editForm.icon,
       dailyIrrigationGoal: Number(editForm.dailyIrrigationGoal) || 1,
       idealTemperature: Number(editForm.idealTemperature) || 24,
-    };
-
-    updateDocumentNonBlocking(cropRef, updatedData);
+    });
     setIsEditDialogOpen(false);
   };
 
@@ -99,6 +119,28 @@ export default function CropDetailPage() {
     if (!cropRef) return;
     deleteDocumentNonBlocking(cropRef);
     router.push("/dashboard");
+  };
+
+  const handleRegisterIrrigation = () => {
+    if (!cropRef || !crop) return;
+    const newCount = (crop.irrigationsToday || 0) + 1;
+    
+    updateDocumentNonBlocking(cropRef, {
+      irrigationsToday: newCount
+    });
+
+    if (newCount > (crop.dailyIrrigationGoal || 0)) {
+      toast({
+        variant: "destructive",
+        title: "¡Advertencia de exceso!",
+        description: "Estás superando la meta. Ten cuidado de no ahogar las raíces.",
+      });
+    } else if (newCount === crop.dailyIrrigationGoal) {
+      toast({
+        title: "¡Meta alcanzada!",
+        description: "Has completado los riegos del día. ¡Excelente trabajo!",
+      });
+    }
   };
 
   const filteredPlantTypes = useMemo(() => {
@@ -113,6 +155,26 @@ export default function CropDetailPage() {
     const IconComponent = iconObj.icon;
     return <IconComponent className={className} />;
   };
+
+  const irrigationData = useMemo(() => {
+    if (!crop) return { status: "Bajo", message: "", percentage: 0 };
+    const current = crop.irrigationsToday || 0;
+    const goal = crop.dailyIrrigationGoal || 1;
+    const percentage = Math.min((current / goal) * 100, 100);
+
+    let status = "Riego Bajo";
+    let message = NEED_WATER_MESSAGES[current % NEED_WATER_MESSAGES.length];
+
+    if (current === goal) {
+      status = "Riego Óptimo";
+      message = "¡Perfecto! Has llegado a la meta. ✨";
+    } else if (current > goal) {
+      status = "Sobre-regado";
+      message = OVERWATER_MESSAGES[(current - goal - 1) % OVERWATER_MESSAGES.length];
+    }
+
+    return { status, message, percentage };
+  }, [crop]);
 
   if (isLoading) {
     return (
@@ -141,8 +203,8 @@ export default function CropDetailPage() {
           <h1 className="text-2xl font-bold tracking-tight truncate">{crop.name}</h1>
           <p className="text-sm text-muted-foreground">{crop.type}</p>
         </div>
-        <Badge variant={crop.generalStatus === "Saludable" ? "default" : "destructive"}>
-          {crop.generalStatus}
+        <Badge variant={irrigationData.status === "Riego Óptimo" ? "default" : irrigationData.status === "Sobre-regado" ? "destructive" : "secondary"}>
+          {irrigationData.status}
         </Badge>
       </div>
 
@@ -157,22 +219,18 @@ export default function CropDetailPage() {
           <DialogContent className="sm:max-w-[425px] overflow-y-auto max-h-[90vh]">
             <DialogHeader>
               <DialogTitle>Editar Cultivo</DialogTitle>
-              <DialogDescription>Modifica los parámetros de tu cultivo inteligente.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label>Selecciona un icono</Label>
+                <Label>Icono</Label>
                 <div className="grid grid-cols-6 gap-2">
                   {CROP_ICONS.map((item) => (
                     <button
                       key={item.name}
-                      type="button"
                       onClick={() => setEditForm({ ...editForm, icon: item.name })}
                       className={cn(
                         "flex items-center justify-center h-10 rounded-lg border-2 transition-all",
-                        editForm.icon === item.name 
-                          ? "border-primary bg-primary/10 text-primary" 
-                          : "border-transparent bg-muted hover:bg-muted/80"
+                        editForm.icon === item.name ? "border-primary bg-primary/10" : "border-transparent bg-muted"
                       )}
                     >
                       <item.icon className="w-5 h-5" />
@@ -180,102 +238,45 @@ export default function CropDetailPage() {
                   ))}
                 </div>
               </div>
-
               <div className="grid gap-2">
-                <Label htmlFor="edit-name">Nombre del cultivo</Label>
-                <Input 
-                  id="edit-name" 
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                  className="h-11"
-                />
+                <Label htmlFor="edit-name">Nombre</Label>
+                <Input id="edit-name" value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})} />
               </div>
-
               <div className="grid gap-2 relative" ref={dropdownRef}>
-                <Label htmlFor="edit-type">Tipo de planta</Label>
-                <div className="relative">
-                  <Input
-                    id="edit-type"
-                    value={searchQuery}
-                    autoComplete="off"
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setIsDropdownOpen(true);
-                      if (editForm.type && e.target.value !== editForm.type) {
-                        setEditForm(prev => ({ ...prev, type: "" }));
-                      }
-                    }}
-                    onFocus={() => setIsDropdownOpen(true)}
-                    className={cn(
-                      "pr-10 h-11 transition-all",
-                      editForm.type && "border-primary ring-1 ring-primary/20 bg-primary/5"
-                    )}
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    {editForm.type ? (
-                      <Check className="h-4 w-4 text-primary" />
-                    ) : (
-                      <Search className="h-4 w-4 opacity-50" />
-                    )}
-                  </div>
-                </div>
-
+                <Label>Tipo de planta</Label>
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); setIsDropdownOpen(true); }}
+                  onFocus={() => setIsDropdownOpen(true)}
+                  placeholder="Buscar tipo..."
+                />
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 z-[100] mt-2 bg-card border rounded-xl shadow-2xl overflow-hidden">
-                    <ScrollArea className="h-56">
-                      <div className="p-2 space-y-1">
-                        {filteredPlantTypes.map((type) => (
-                          <button
-                            key={type}
-                            type="button"
-                            className={cn(
-                              "flex w-full items-center px-3 py-2.5 text-sm text-left hover:bg-primary/10 transition-colors rounded-lg",
-                              editForm.type === type && "bg-primary/5 text-primary font-bold"
-                            )}
-                            onClick={() => {
-                              setEditForm({ ...editForm, type });
-                              setSearchQuery(type);
-                              setIsDropdownOpen(false);
-                            }}
-                          >
-                            <Sprout className="mr-3 h-4 w-4 opacity-70 text-primary" />
-                            {type}
-                            {editForm.type === type && <Check className="ml-auto h-4 w-4" />}
-                          </button>
-                        ))}
-                      </div>
-                    </ScrollArea>
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-card border rounded-lg shadow-lg max-h-40 overflow-auto">
+                    {filteredPlantTypes.map(type => (
+                      <button
+                        key={type}
+                        className="w-full text-left px-4 py-2 hover:bg-muted text-sm"
+                        onClick={() => { setEditForm({...editForm, type}); setSearchQuery(type); setIsDropdownOpen(false); }}
+                      >
+                        {type}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-irrigation">Riegos diarios</Label>
-                  <Input 
-                    id="edit-irrigation" 
-                    type="number"
-                    value={editForm.dailyIrrigationGoal}
-                    onChange={(e) => setEditForm({...editForm, dailyIrrigationGoal: e.target.value})}
-                    className="h-11"
-                  />
+                  <Label>Riegos meta</Label>
+                  <Input type="number" value={editForm.dailyIrrigationGoal} onChange={(e) => setEditForm({...editForm, dailyIrrigationGoal: e.target.value})} />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-temp">Temp. Ideal (°C)</Label>
-                  <Input 
-                    id="edit-temp" 
-                    type="number"
-                    value={editForm.idealTemperature}
-                    onChange={(e) => setEditForm({...editForm, idealTemperature: e.target.value})}
-                    className="h-11"
-                  />
+                  <Label>Temp (°C)</Label>
+                  <Input type="number" value={editForm.idealTemperature} onChange={(e) => setEditForm({...editForm, idealTemperature: e.target.value})} />
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleUpdateCrop} className="w-full h-12" disabled={!editForm.name || !editForm.type}>
-                Guardar Cambios
-              </Button>
+              <Button onClick={handleUpdateCrop} className="w-full">Guardar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -289,57 +290,127 @@ export default function CropDetailPage() {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>¿Estás completamente seguro?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta acción no se puede deshacer. Se eliminarán permanentemente los datos de "{crop.name}" de nuestros servidores.
-              </AlertDialogDescription>
+              <AlertDialogTitle>¿Confirmas la eliminación?</AlertDialogTitle>
+              <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteCrop} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Eliminar para siempre
-              </AlertDialogAction>
+              <AlertDialogCancel>No</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteCrop}>Sí, eliminar</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
 
+      {/* Gota Progresiva y Temperatura */}
       <div className="grid grid-cols-2 gap-4">
-        <Card className="bg-blue-50/50 border-blue-100 rounded-2xl">
-          <CardContent className="p-4 flex flex-col items-center gap-2">
-            <Droplets className="w-6 h-6 text-blue-500" />
-            <div className="text-center">
-              <p className="text-[10px] uppercase font-bold text-blue-600/70">Riego Hoy</p>
-              <p className="text-xl font-bold">{crop.irrigationsToday}/{crop.dailyIrrigationGoal ?? 1}</p>
+        <Card className="rounded-2xl border-none shadow-sm overflow-hidden bg-white">
+          <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
+            <div className="relative w-16 h-20">
+              {/* SVG de Gota */}
+              <svg viewBox="0 0 30 42" className="w-full h-full drop-shadow-md">
+                <path
+                  d="M15 3 Q15 3 25 18 A10 10 0 1 1 5 18 Q15 3 15 3 Z"
+                  fill="#e2e8f0"
+                />
+                <mask id="water-mask">
+                  <path d="M15 3 Q15 3 25 18 A10 10 0 1 1 5 18 Q15 3 15 3 Z" fill="white" />
+                </mask>
+                <rect
+                  x="0"
+                  y={42 - (42 * irrigationData.percentage / 100)}
+                  width="30"
+                  height="42"
+                  fill="#3b82f6"
+                  mask="url(#water-mask)"
+                  className="transition-all duration-700 ease-in-out"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center mt-4">
+                <span className="text-xs font-bold text-slate-700">{crop.irrigationsToday}/{crop.dailyIrrigationGoal}</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground">Riego Hoy</p>
+              <p className="text-xs font-semibold text-blue-600">Progreso</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-orange-50/50 border-orange-100 rounded-2xl">
-          <CardContent className="p-4 flex flex-col items-center gap-2">
-            <Thermometer className="w-6 h-6 text-orange-500" />
-            <div className="text-center">
-              <p className="text-[10px] uppercase font-bold text-orange-600/70">Temp. Ideal</p>
+
+        <Card className="rounded-2xl border-none shadow-sm bg-white">
+          <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
+            <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center">
+              <Thermometer className="w-8 h-8 text-orange-500" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground">Temp. Ideal</p>
               <p className="text-xl font-bold">{crop.idealTemperature ?? 24}°C</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Estado Actual */}
       <Card className="rounded-2xl shadow-sm border-none bg-white">
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             {getCropIcon(crop.icon || "Sprout", "w-6 h-6 text-primary")}
             Estado Actual
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Tu {(crop.type || "planta").toLowerCase()} se encuentra en estado <span className="text-primary font-bold">{(crop.generalStatus || "Saludable").toLowerCase()}</span>. 
-            El sistema está monitoreando las condiciones ambientales para asegurar el crecimiento óptimo.
-          </p>
-          <Button className="w-full h-12 rounded-xl text-base font-semibold shadow-lg shadow-primary/10">
+          <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+            <p className="text-sm font-medium text-primary mb-1">{irrigationData.status}</p>
+            <p className="text-sm text-slate-600 leading-relaxed italic">
+              "{irrigationData.message}"
+            </p>
+          </div>
+          
+          {crop.irrigationsToday > crop.dailyIrrigationGoal && (
+            <Alert variant="destructive" className="rounded-xl border-destructive/20 bg-destructive/5">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle className="text-xs font-bold uppercase">¡Peligro de Ahogo!</AlertTitle>
+              <AlertDescription className="text-xs">
+                Has excedido los riegos recomendados. El exceso de humedad puede pudrir las raíces.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Button 
+            onClick={handleRegisterIrrigation}
+            className="w-full h-12 rounded-xl text-base font-semibold shadow-lg shadow-primary/10"
+          >
             Registrar Riego Manual
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Sección de Recomendaciones */}
+      <Card className="rounded-2xl shadow-sm border-none bg-white overflow-hidden">
+        <CardHeader className="bg-secondary/10 pb-3">
+          <CardTitle className="text-lg flex items-center gap-2 text-secondary-foreground">
+            <Info className="w-5 h-5" />
+            Recomendaciones de Cuidado
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex gap-3 items-start p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+              <Droplets className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="text-xs">
+              <p className="font-bold text-slate-700">Frecuencia de Riego</p>
+              <p className="text-slate-500">Para un(a) {crop.type}, es mejor regar temprano en la mañana para evitar hongos.</p>
+            </div>
+          </div>
+          <div className="flex gap-3 items-start p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+              <Thermometer className="w-4 h-4 text-orange-600" />
+            </div>
+            <div className="text-xs">
+              <p className="font-bold text-slate-700">Clima Ideal</p>
+              <p className="text-slate-500">Mantén tu cultivo lejos de corrientes de aire directas si la temperatura baja de 15°C.</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
       
