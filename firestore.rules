@@ -52,10 +52,10 @@ service cloud.firestore {
         }
 
         match /chatMessages/{chatMessageId} {
-          // Refreshed rules for chat messages synchronization
+          // Refreshed and simplified rules to ensure synchronization
           allow get, list: if isOwner(userId);
           allow create: if isOwner(userId) 
-            && request.resource.data.userId == userId 
+            && request.resource.data.userId == request.auth.uid 
             && request.resource.data.cropId == cropId;
           allow update: if isExistingOwner(userId) 
             && request.resource.data.userId == resource.data.userId 

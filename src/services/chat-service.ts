@@ -63,12 +63,13 @@ export const ChatService = {
     const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
     const messageId = doc(messagesRef).id;
     
+    // Aseguramos que el objeto cumpla exactamente con el esquema del backend.json
     const userMessage: ChatMessageData = {
       id: messageId,
-      userId,
-      cropId,
+      userId: userId,
+      cropId: cropId,
       messageType: 'user',
-      text: text || (imageUrl ? "Imagen adjunta" : ""),
+      text: text || (imageUrl ? "Imagen adjunta" : "Analizando..."),
       imageUrl: imageUrl || undefined,
       timestamp: serverTimestamp(),
       status: 'sent'
@@ -109,8 +110,8 @@ export const ChatService = {
 
       const systemMessage: ChatMessageData = {
         id: messageId,
-        userId,
-        cropId,
+        userId: userId,
+        cropId: cropId,
         messageType: 'system',
         text: simulatedText,
         timestamp: serverTimestamp(),
