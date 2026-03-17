@@ -12,7 +12,7 @@ import {
   deleteDocumentNonBlocking,
   addDocumentNonBlocking
 } from "@/firebase";
-import { doc, collection, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { doc, collection, query, orderBy } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { 
@@ -42,6 +42,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const PLANT_TYPES = [
   "Cactus", "Suculentas", "Árboles", "Plantas subterráneas", "Plantas trepadoras", "Plantas acuáticas", "Plantas ornamentales", "Plantas medicinales", "Tomate", "Lechuga", "Chile", "Fresa"
@@ -91,7 +92,6 @@ export default function CropDetailPage() {
 
   const { data: crop, isLoading } = useDoc(cropRef);
 
-  // Notas
   const notesQuery = useMemoFirebase(() => {
     if (!firestore || !user || !cropId) return null;
     return query(
@@ -103,7 +103,6 @@ export default function CropDetailPage() {
   const { data: notes, isLoading: isLoadingNotes } = useCollection(notesQuery);
   const [newNoteContent, setNewNoteContent] = useState("");
 
-  // Estados para Edición
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -116,7 +115,6 @@ export default function CropDetailPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Inicializar formulario al abrir edición
   useEffect(() => {
     if (crop && isEditDialogOpen) {
       setEditForm({
@@ -444,7 +442,6 @@ export default function CropDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Sección de Notas */}
       <Card className="rounded-2xl shadow-sm border-none bg-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
