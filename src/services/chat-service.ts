@@ -2,7 +2,8 @@
 
 import { 
   collection, 
-  addDoc, 
+  doc,
+  setDoc,
   serverTimestamp, 
   Firestore 
 } from 'firebase/firestore';
@@ -16,6 +17,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 export interface ChatMessageData {
+  id: string;
   userId: string;
   cropId: string;
   messageType: 'user' | 'system';
@@ -55,9 +57,12 @@ export const ChatService = {
       }
     }
 
-    // 2. Guardar mensaje del usuario
+    // 2. Generar ID y preparar mensaje del usuario
     const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
-    const userMessage: Omit<ChatMessageData, 'id'> = {
+    const messageId = doc(messagesRef).id;
+    
+    const userMessage: ChatMessageData = {
+      id: messageId,
       userId,
       cropId,
       messageType: 'user',
@@ -68,12 +73,13 @@ export const ChatService = {
     };
 
     try {
-      await addDoc(messagesRef, userMessage);
+      const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
+      await setDoc(messageDocRef, userMessage);
       // Simular respuesta después del guardado exitoso
       this.generateSimulatedResponse(db, userId, cropId);
     } catch (error) {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: messagesRef.path,
+        path: `users/${userId}/crops/${cropId}/chatMessages/${messageId}`,
         operation: 'create',
         requestResourceData: userMessage
       }));
@@ -89,6 +95,7 @@ export const ChatService = {
     
     // Simular retraso de procesamiento
     setTimeout(async () => {
+      const messageId = doc(messagesRef).id;
       const simulatedText = `**Análisis de Situación:**
 - **Posible problema:** Estrés hídrico o desbalance de nutrientes detectado visualmente.
 - **Nivel de urgencia:** Medio.
@@ -96,7 +103,8 @@ export const ChatService = {
 
 *Nota: Esta es una orientación inicial automatizada basada en los datos proporcionados. Consulta a un agrónomo para un diagnóstico definitivo.*`;
 
-      const systemMessage: Omit<ChatMessageData, 'id'> = {
+      const systemMessage: ChatMessageData = {
+        id: messageId,
         userId,
         cropId,
         messageType: 'system',
@@ -106,10 +114,11 @@ export const ChatService = {
       };
 
       try {
-        await addDoc(messagesRef, systemMessage);
+        const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
+        await setDoc(messageDocRef, systemMessage);
       } catch (error) {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: messagesRef.path,
+          path: `users/${userId}/crops/${cropId}/chatMessages/${messageId}`,
           operation: 'create',
           requestResourceData: systemMessage
         }));
