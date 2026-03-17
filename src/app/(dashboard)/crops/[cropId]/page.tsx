@@ -1,20 +1,45 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { 
+  useUser, 
+  useFirestore, 
+  useDoc, 
+  useCollection,
+  useMemoFirebase, 
+  updateDocumentNonBlocking, 
+  deleteDocumentNonBlocking,
+  addDocumentNonBlocking
+} from "@/firebase";
+import { doc, collection, query, orderBy, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Droplets, Thermometer, Sprout, Loader2, Leaf, Flower2, TreePine, Shrub, Wheat, Pencil, Trash2, Check, Search, AlertTriangle, Info } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Droplets, 
+  Thermometer, 
+  Sprout, 
+  Loader2, 
+  Leaf, 
+  Flower2, 
+  TreePine, 
+  Shrub, 
+  Wheat, 
+  Pencil, 
+  Trash2, 
+  AlertTriangle, 
+  Info, 
+  StickyNote, 
+  Plus,
+  Calendar
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -65,6 +90,18 @@ export default function CropDetailPage() {
   }, [firestore, user, cropId]);
 
   const { data: crop, isLoading } = useDoc(cropRef);
+
+  // Notas
+  const notesQuery = useMemoFirebase(() => {
+    if (!firestore || !user || !cropId) return null;
+    return query(
+      collection(firestore, "users", user.uid, "crops", cropId as string, "notes"),
+      orderBy("createdAt", "desc")
+    );
+  }, [firestore, user, cropId]);
+
+  const { data: notes, isLoading: isLoadingNotes } = useCollection(notesQuery);
+  const [newNoteContent, setNewNoteContent] = useState("");
 
   // Estados para Edición
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -143,6 +180,32 @@ export default function CropDetailPage() {
     }
   };
 
+  const handleAddNote = () => {
+    if (!firestore || !user || !cropId || !newNoteContent.trim()) return;
+    const notesRef = collection(firestore, "users", user.uid, "crops", cropId as string, "notes");
+    addDocumentNonBlocking(notesRef, {
+      userId: user.uid,
+      cropId: cropId,
+      content: newNoteContent,
+      createdAt: new Date().toISOString()
+    });
+    setNewNoteContent("");
+    toast({
+      title: "Nota guardada",
+      description: "Tu nota ha sido agregada correctamente.",
+    });
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    if (!firestore || !user || !cropId) return;
+    const noteRef = doc(firestore, "users", user.uid, "crops", cropId as string, "notes", noteId);
+    deleteDocumentNonBlocking(noteRef);
+    toast({
+      title: "Nota eliminada",
+      description: "La nota ha sido removida.",
+    });
+  };
+
   const filteredPlantTypes = useMemo(() => {
     if (!searchQuery) return PLANT_TYPES;
     return PLANT_TYPES.filter((type) =>
@@ -194,9 +257,9 @@ export default function CropDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-10">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
           <ArrowLeft className="w-6 h-6" />
         </Button>
         <div className="flex-1 min-w-0">
@@ -211,7 +274,7 @@ export default function CropDetailPage() {
       <div className="flex gap-2">
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="flex-1 gap-2 h-11 rounded-xl">
+            <Button variant="secondary" className="flex-1 gap-2 h-11 rounded-xl bg-secondary/20 text-secondary-foreground hover:bg-secondary/30 transition-colors border-none shadow-none">
               <Pencil className="w-4 h-4" />
               Editar
             </Button>
@@ -276,14 +339,14 @@ export default function CropDetailPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleUpdateCrop} className="w-full">Guardar</Button>
+              <Button onClick={handleUpdateCrop} className="w-full">Guardar Cambios</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="flex-1 gap-2 h-11 rounded-xl">
+            <Button variant="ghost" className="flex-1 gap-2 h-11 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive">
               <Trash2 className="w-4 h-4" />
               Eliminar
             </Button>
@@ -291,24 +354,21 @@ export default function CropDetailPage() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>¿Confirmas la eliminación?</AlertDialogTitle>
-              <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+              <AlertDialogDescription>Esta acción no se puede deshacer. Perderás todo el historial de este cultivo.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>No</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteCrop}>Sí, eliminar</AlertDialogAction>
+              <AlertDialogCancel>No, cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteCrop} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Sí, eliminar</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
 
-      {/* Gota Progresiva y Temperatura */}
       <div className="grid grid-cols-2 gap-4">
         <Card className="rounded-2xl border-none shadow-sm overflow-hidden bg-white">
           <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
             <div className="relative w-16 h-20">
-              {/* SVG de Gota Refinado */}
               <svg viewBox="0 0 30 42" className="w-full h-full drop-shadow-md">
-                {/* Fondo de la gota (vacío) */}
                 <path
                   d="M15 2 C15 2 27 18 27 28 A12 12 0 0 1 3 28 C3 18 15 2 15 2 Z"
                   fill="#e2e8f0"
@@ -316,7 +376,6 @@ export default function CropDetailPage() {
                 <mask id="water-mask-v2">
                   <path d="M15 2 C15 2 27 18 27 28 A12 12 0 0 1 3 28 C3 18 15 2 15 2 Z" fill="white" />
                 </mask>
-                {/* Relleno de agua progresivo */}
                 <rect
                   x="0"
                   y={42 - (42 * irrigationData.percentage / 100)}
@@ -351,7 +410,6 @@ export default function CropDetailPage() {
         </Card>
       </div>
 
-      {/* Estado Actual */}
       <Card className="rounded-2xl shadow-sm border-none bg-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
@@ -386,7 +444,63 @@ export default function CropDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Sección de Recomendaciones */}
+      {/* Sección de Notas */}
+      <Card className="rounded-2xl shadow-sm border-none bg-white">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <StickyNote className="w-6 h-6 text-secondary" />
+            Notas Personales
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <Textarea 
+              placeholder="Añade un recordatorio sobre este cultivo..." 
+              value={newNoteContent}
+              onChange={(e) => setNewNoteContent(e.target.value)}
+              className="rounded-xl border-muted min-h-[80px]"
+            />
+            <Button 
+              onClick={handleAddNote}
+              disabled={!newNoteContent.trim()}
+              variant="secondary"
+              className="w-full gap-2 rounded-xl h-10"
+            >
+              <Plus className="w-4 h-4" />
+              Añadir Nota
+            </Button>
+          </div>
+
+          <div className="space-y-3 mt-2">
+            {notes && notes.length > 0 ? (
+              notes.map((note) => (
+                <div key={note.id} className="p-3 bg-muted/30 rounded-xl relative group">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground">
+                      {note.createdAt ? new Date(note.createdAt).toLocaleDateString() : 'Recién añadida'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-700 pr-8">{note.content}</p>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteNote(note.id)}
+                    className="h-7 w-7 absolute top-2 right-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-6">
+                <p className="text-xs text-muted-foreground italic">No hay notas registradas aún.</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="rounded-2xl shadow-sm border-none bg-white overflow-hidden">
         <CardHeader className="bg-secondary/10 pb-3">
           <CardTitle className="text-lg flex items-center gap-2 text-secondary-foreground">
