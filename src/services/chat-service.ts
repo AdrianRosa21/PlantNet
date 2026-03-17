@@ -27,12 +27,9 @@ export interface ChatMessageData {
   status: 'sent' | 'processing' | 'responded';
 }
 
-/**
- * Servicio para gestionar el chat de cultivos.
- */
 export const ChatService = {
   /**
-   * Envía un mensaje del usuario y dispara la respuesta simulada.
+   * Envía un mensaje. Maneja la subida a Storage y el guardado en Firestore.
    */
   async sendMessage(
     db: Firestore,
@@ -44,29 +41,27 @@ export const ChatService = {
   ) {
     let imageUrl = '';
 
-    // 1. Subir imagen si existe
+    // 1. Subida a Storage si hay imagen
     if (imageFile) {
       try {
-        const fileExtension = imageFile.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExtension}`;
+        const timestamp = Date.now();
+        const fileName = `${timestamp}_${imageFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
         const storagePath = `users/${userId}/crops/${cropId}/chats/${fileName}`;
         const storageRef = ref(storage, storagePath);
         
-        // Iniciamos la subida
         const snapshot = await uploadBytes(storageRef, imageFile);
         imageUrl = await getDownloadURL(snapshot.ref);
-      } catch (error) {
-        console.error("Storage upload error:", error);
-        throw new Error("No se pudo subir la imagen. Verifica tu conexión.");
+      } catch (error: any) {
+        console.error("Error en Storage:", error);
+        throw new Error("Error al subir la imagen: " + (error.message || "Fallo desconocido"));
       }
     }
 
-    // 2. Generar ID y preparar mensaje del usuario
+    // 2. Preparar documento de Firestore
     const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
     const messageId = doc(messagesRef).id;
     
-    // Construimos el objeto evitando campos 'undefined' para Firestore
-    const userMessage: any = {
+    const userMessage: ChatMessageData = {
       id: messageId,
       userId: userId,
       cropId: cropId,
@@ -84,10 +79,10 @@ export const ChatService = {
       const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
       await setDoc(messageDocRef, userMessage);
       
-      // Simular respuesta después del guardado exitoso
+      // Respuesta simulada
       this.generateSimulatedResponse(db, userId, cropId);
-    } catch (error) {
-      console.error("Firestore message error:", error);
+    } catch (error: any) {
+      console.error("Error en Firestore:", error);
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: `users/${userId}/crops/${cropId}/chatMessages/${messageId}`,
         operation: 'create',
@@ -97,36 +92,26 @@ export const ChatService = {
     }
   },
 
-  /**
-   * Genera una respuesta simulada estructurada.
-   */
   async generateSimulatedResponse(db: Firestore, userId: string, cropId: string) {
-    const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
-    
     setTimeout(async () => {
-      const messageId = doc(messagesRef).id;
-      const simulatedText = `**Análisis de Situación:**
-- **Posible problema:** Estrés hídrico o desbalance de nutrientes detectado visualmente.
-- **Nivel de urgencia:** Medio.
-- **Acción sugerida:** Verifica la humedad del suelo a 5cm de profundidad y evita mojar las hojas directamente durante el riego.
-
-*Nota: Esta es una orientación inicial automatizada basada en los datos proporcionados. Consulta a un agrónomo para un diagnóstico definitivo.*`;
-
-      const systemMessage: ChatMessageData = {
-        id: messageId,
-        userId: userId,
-        cropId: cropId,
-        messageType: 'system',
-        text: simulatedText,
-        timestamp: serverTimestamp(),
-        status: 'responded'
-      };
-
       try {
+        const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
+        const messageId = doc(messagesRef).id;
+        
+        const systemMessage: ChatMessageData = {
+          id: messageId,
+          userId: userId,
+          cropId: cropId,
+          messageType: 'system',
+          text: `**Diagnóstico Sugerido:**\n\n- **Problema:** Posible desajuste en el pH del suelo o falta de luz.\n- **Urgencia:** Media.\n- **Acción:** Asegúrate de que reciba al menos 6 horas de luz indirecta y revisa el drenaje.\n\n*Nota: Esto es una simulación de orientación.*`,
+          timestamp: serverTimestamp(),
+          status: 'responded'
+        };
+
         const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
         await setDoc(messageDocRef, systemMessage);
-      } catch (error) {
-        console.error("Error saving simulated response:", error);
+      } catch (e) {
+        console.error("Error en respuesta simulada:", e);
       }
     }, 2000);
   }
