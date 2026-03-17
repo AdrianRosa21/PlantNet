@@ -46,13 +46,19 @@ export const ChatService = {
       try {
         const timestamp = Date.now();
         const fileName = `${timestamp}_${imageFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-        const storagePath = `users/${userId}/crops/${cropId}/chats/${fileName}`;
+        // Ruta simplificada para evitar problemas de permisos anidados
+        const storagePath = `chats/${userId}/${cropId}/${fileName}`;
         const storageRef = ref(storage, storagePath);
         
+        console.log("Iniciando subida a:", storagePath);
         const snapshot = await uploadBytes(storageRef, imageFile);
         imageUrl = await getDownloadURL(snapshot.ref);
+        console.log("Imagen subida con éxito:", imageUrl);
       } catch (error: any) {
-        console.error("Error en Storage:", error);
+        console.error("Error crítico en Storage:", error);
+        if (error.code === 'storage/retry-limit-exceeded') {
+          throw new Error("Error de red: No se pudo conectar con el servidor de imágenes. Revisa tu conexión.");
+        }
         throw new Error("Error al subir la imagen: " + (error.message || "Fallo desconocido"));
       }
     }
@@ -82,7 +88,7 @@ export const ChatService = {
       // Respuesta simulada
       this.generateSimulatedResponse(db, userId, cropId);
     } catch (error: any) {
-      console.error("Error en Firestore:", error);
+      console.error("Error en Firestore al guardar mensaje:", error);
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: `users/${userId}/crops/${cropId}/chatMessages/${messageId}`,
         operation: 'create',
@@ -103,7 +109,7 @@ export const ChatService = {
           userId: userId,
           cropId: cropId,
           messageType: 'system',
-          text: `**Diagnóstico Sugerido:**\n\n- **Problema:** Posible desajuste en el pH del suelo o falta de luz.\n- **Urgencia:** Media.\n- **Acción:** Asegúrate de que reciba al menos 6 horas de luz indirecta y revisa el drenaje.\n\n*Nota: Esto es una simulación de orientación.*`,
+          text: `**Análisis de AgroAlerta:**\n\n- **Estado:** Basado en la información recibida, parece un desajuste de riego.\n- **Urgencia:** Media.\n- **Acción:** Asegúrate de que el suelo drene bien y evita regar en las horas de sol intenso.\n\n*Nota: Esta es una orientación inicial simulada.*`,
           timestamp: serverTimestamp(),
           status: 'responded'
         };
