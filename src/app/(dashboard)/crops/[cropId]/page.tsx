@@ -344,7 +344,7 @@ export default function CropDetailPage() {
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="ghost" className="flex-1 gap-2 h-11 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive">
+            <Button variant="secondary" className="flex-1 gap-2 h-11 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors border-none shadow-none">
               <Trash2 className="w-4 h-4" />
               Eliminar
             </Button>
