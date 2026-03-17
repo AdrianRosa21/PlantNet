@@ -255,7 +255,7 @@ export default function CropDetailPage() {
   }
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-6 pb-20">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
           <ArrowLeft className="w-6 h-6" />
@@ -269,97 +269,16 @@ export default function CropDetailPage() {
         </Badge>
       </div>
 
-      <div className="flex gap-2">
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="secondary" className="flex-1 gap-2 h-11 rounded-xl bg-secondary/20 text-secondary-foreground hover:bg-secondary/30 transition-colors border-none shadow-none">
-              <Pencil className="w-4 h-4" />
-              Editar
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] overflow-y-auto max-h-[90vh]">
-            <DialogHeader>
-              <DialogTitle>Editar Cultivo</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label>Icono</Label>
-                <div className="grid grid-cols-6 gap-2">
-                  {CROP_ICONS.map((item) => (
-                    <button
-                      key={item.name}
-                      onClick={() => setEditForm({ ...editForm, icon: item.name })}
-                      className={cn(
-                        "flex items-center justify-center h-10 rounded-lg border-2 transition-all",
-                        editForm.icon === item.name ? "border-primary bg-primary/10" : "border-transparent bg-muted"
-                      )}
-                    >
-                      <item.icon className="w-5 h-5" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">Nombre</Label>
-                <Input id="edit-name" value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})} />
-              </div>
-              <div className="grid gap-2 relative" ref={dropdownRef}>
-                <Label>Tipo de planta</Label>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setIsDropdownOpen(true); }}
-                  onFocus={() => setIsDropdownOpen(true)}
-                  placeholder="Buscar tipo..."
-                />
-                {isDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-card border rounded-lg shadow-lg max-h-40 overflow-auto">
-                    {filteredPlantTypes.map(type => (
-                      <button
-                        key={type}
-                        className="w-full text-left px-4 py-2 hover:bg-muted text-sm"
-                        onClick={() => { setEditForm({...editForm, type}); setSearchQuery(type); setIsDropdownOpen(false); }}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Riegos meta</Label>
-                  <Input type="number" value={editForm.dailyIrrigationGoal} onChange={(e) => setEditForm({...editForm, dailyIrrigationGoal: e.target.value})} />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Temp (°C)</Label>
-                  <Input type="number" value={editForm.idealTemperature} onChange={(e) => setEditForm({...editForm, idealTemperature: e.target.value})} />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleUpdateCrop} className="w-full">Guardar Cambios</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="secondary" className="flex-1 gap-2 h-11 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors border-none shadow-none">
-              <Trash2 className="w-4 h-4" />
-              Eliminar
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>¿Confirmas la eliminación?</AlertDialogTitle>
-              <AlertDialogDescription>Esta acción no se puede deshacer. Perderás todo el historial de este cultivo.</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>No, cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteCrop} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Sí, eliminar</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+      <div className="p-5 bg-primary/5 rounded-3xl border border-primary/10 flex items-start gap-3">
+        <div className="mt-1 bg-primary/20 p-2 rounded-xl">
+          <Leaf className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-bold text-primary text-sm mb-1">Próximamente: Diagnóstico IA</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Muy pronto podrás subir fotos de las hojas para detectar enfermedades automáticamente con visión artificial.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -389,8 +308,8 @@ export default function CropDetailPage() {
               </div>
             </div>
             <div>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground">Riego Hoy</p>
-              <p className="text-xs font-semibold text-blue-600">Progreso</p>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground">Progreso</p>
+              <p className="text-xs font-semibold text-blue-600">Riego Hoy</p>
             </div>
           </CardContent>
         </Card>
@@ -526,17 +445,98 @@ export default function CropDetailPage() {
           </div>
         </CardContent>
       </Card>
-      
-      <div className="p-5 bg-primary/5 rounded-3xl border border-primary/10 flex items-start gap-3">
-        <div className="mt-1 bg-primary/20 p-2 rounded-xl">
-          <Leaf className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <h3 className="font-bold text-primary text-sm mb-1">Próximamente: Diagnóstico IA</h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Muy pronto podrás subir fotos de las hojas para detectar enfermedades automáticamente con visión artificial.
-          </p>
-        </div>
+
+      <div className="flex gap-2">
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="secondary" className="flex-1 gap-2 h-11 rounded-xl bg-secondary/20 text-secondary-foreground hover:bg-secondary/30 transition-colors border-none shadow-none font-semibold">
+              <Pencil className="w-4 h-4" />
+              Editar Cultivo
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px] overflow-y-auto max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle>Editar Cultivo</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Icono</Label>
+                <div className="grid grid-cols-6 gap-2">
+                  {CROP_ICONS.map((item) => (
+                    <button
+                      key={item.name}
+                      onClick={() => setEditForm({ ...editForm, icon: item.name })}
+                      className={cn(
+                        "flex items-center justify-center h-10 rounded-lg border-2 transition-all",
+                        editForm.icon === item.name ? "border-primary bg-primary/10" : "border-transparent bg-muted"
+                      )}
+                    >
+                      <item.icon className="w-5 h-5" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">Nombre</Label>
+                <Input id="edit-name" value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})} />
+              </div>
+              <div className="grid gap-2 relative" ref={dropdownRef}>
+                <Label>Tipo de planta</Label>
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); setIsDropdownOpen(true); }}
+                  onFocus={() => setIsDropdownOpen(true)}
+                  placeholder="Buscar tipo..."
+                />
+                {isDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-card border rounded-lg shadow-lg max-h-40 overflow-auto">
+                    {filteredPlantTypes.map(type => (
+                      <button
+                        key={type}
+                        className="w-full text-left px-4 py-2 hover:bg-muted text-sm"
+                        onClick={() => { setEditForm({...editForm, type}); setSearchQuery(type); setIsDropdownOpen(false); }}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Riegos meta</Label>
+                  <Input type="number" value={editForm.dailyIrrigationGoal} onChange={(e) => setEditForm({...editForm, dailyIrrigationGoal: e.target.value})} />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Temp (°C)</Label>
+                  <Input type="number" value={editForm.idealTemperature} onChange={(e) => setEditForm({...editForm, idealTemperature: e.target.value})} />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleUpdateCrop} className="w-full">Guardar Cambios</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="secondary" className="flex-1 gap-2 h-11 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors border-none shadow-none font-semibold">
+              <Trash2 className="w-4 h-4" />
+              Eliminar
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Confirmas la eliminación?</AlertDialogTitle>
+              <AlertDialogDescription>Esta acción no se puede deshacer. Perderás todo el historial de este cultivo.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>No, cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteCrop} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Sí, eliminar</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
