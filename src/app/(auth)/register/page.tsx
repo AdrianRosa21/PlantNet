@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus } from "lucide-react";
+import { UserPlus, ArrowLeft } from "lucide-react";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -73,66 +73,79 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center p-6">
-      <Card className="w-full border-none shadow-none bg-transparent">
-        <CardHeader className="text-center space-y-1">
-          <div className="mx-auto w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4 shadow-xl shadow-secondary/20">
-            <UserPlus className="text-secondary-foreground w-8 h-8" />
-          </div>
-          <CardTitle className="text-3xl font-bold text-primary">Crear Cuenta</CardTitle>
-          <CardDescription>Únete a nuestra comunidad de agricultores</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nombre Completo</Label>
-              <Input 
-                id="name" 
-                placeholder="Juan Pérez" 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="h-12"
-              />
+    <div className="flex-1 flex flex-col p-6">
+      <div className="mb-2">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => router.push("/login")}
+          className="rounded-full h-10 w-10 -ml-2"
+        >
+          <ArrowLeft className="w-6 h-6 text-primary" />
+        </Button>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center">
+        <Card className="w-full border-none shadow-none bg-transparent">
+          <CardHeader className="text-center space-y-1">
+            <div className="mx-auto w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4 shadow-xl shadow-secondary/20">
+              <UserPlus className="text-secondary-foreground w-8 h-8" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Correo Electrónico</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="ejemplo@agro.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12"
-              />
+            <CardTitle className="text-3xl font-bold text-primary">Crear Cuenta</CardTitle>
+            <CardDescription>Únete a nuestra comunidad de agricultores</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre Completo</Label>
+                <Input 
+                  id="name" 
+                  placeholder="Juan Pérez" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Correo Electrónico</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="ejemplo@agro.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="Mínimo 6 caracteres"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="h-12"
+                />
+              </div>
+              <Button type="submit" className="w-full h-12 text-lg font-semibold" disabled={isLoading}>
+                {isLoading ? "Creando cuenta..." : "Registrarse"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+            <div className="text-sm text-center text-muted-foreground">
+              ¿Ya tienes una cuenta?{" "}
+              <Link href="/login" className="text-primary font-semibold hover:underline">
+                Inicia sesión
+              </Link>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="Mínimo 6 caracteres"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="h-12"
-              />
-            </div>
-            <Button type="submit" className="w-full h-12 text-lg font-semibold" disabled={isLoading}>
-              {isLoading ? "Creando cuenta..." : "Registrarse"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <div className="text-sm text-center text-muted-foreground">
-            ¿Ya tienes una cuenta?{" "}
-            <Link href="/login" className="text-primary font-semibold hover:underline">
-              Inicia sesión
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }
