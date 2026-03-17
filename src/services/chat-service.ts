@@ -28,8 +28,7 @@ export interface ChatMessageData {
 }
 
 /**
- * Servicio de Chat para AgroAlerta IA.
- * Maneja el envío de mensajes, subida de imágenes y respuestas simuladas.
+ * Servicio de Chat optimizado para AgroAlerta IA.
  */
 export const ChatService = {
   async sendMessage(
@@ -42,24 +41,20 @@ export const ChatService = {
   ) {
     let imageUrl = '';
 
-    // 1. Subida a Storage si hay imagen
+    // 1. Subida a Storage
     if (imageFile) {
       try {
-        const timestamp = Date.now();
-        const fileName = `${timestamp}_${imageFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-        // Usamos una ruta de storage simplificada
-        const storagePath = `users/${userId}/crops/${cropId}/${fileName}`;
-        const storageRef = ref(storage, storagePath);
-        
+        const fileName = `${Date.now()}_${imageFile.name}`;
+        const storageRef = ref(storage, `users/${userId}/crops/${cropId}/${fileName}`);
         const snapshot = await uploadBytes(storageRef, imageFile);
         imageUrl = await getDownloadURL(snapshot.ref);
       } catch (error: any) {
-        console.error("Error crítico en Storage:", error);
-        throw new Error("Error al subir la imagen. Verifica tu conexión.");
+        console.error("Error en Storage:", error);
+        throw new Error("Error al subir la imagen. Verifica el bucket en config.ts.");
       }
     }
 
-    // 2. Preparar documento de Firestore
+    // 2. Guardar en Firestore
     const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
     const messageId = doc(messagesRef).id;
     
@@ -79,13 +74,12 @@ export const ChatService = {
 
     try {
       const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
-      // Usamos setDoc para asegurar que el ID del documento coincida con el campo 'id'
       await setDoc(messageDocRef, userMessage);
       
-      // Respuesta simulada (disparada sin esperar)
+      // Respuesta simulada
       this.generateSimulatedResponse(db, userId, cropId);
     } catch (error: any) {
-      console.error("Error en Firestore al guardar mensaje:", error);
+      console.error("Error en Firestore:", error);
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: `users/${userId}/crops/${cropId}/chatMessages/${messageId}`,
         operation: 'create',
@@ -96,7 +90,6 @@ export const ChatService = {
   },
 
   async generateSimulatedResponse(db: Firestore, userId: string, cropId: string) {
-    // Simulamos un retraso de procesamiento
     setTimeout(async () => {
       try {
         const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
@@ -107,7 +100,7 @@ export const ChatService = {
           userId: userId,
           cropId: cropId,
           messageType: 'system',
-          text: `**Análisis de AgroAlerta:**\n\n- **Posible Problema:** Basado en la información recibida, detecto un posible desbalance hídrico o estrés ambiental.\n- **Urgencia:** Media.\n- **Acción sugerida:** Revisa la humedad del suelo a 5cm de profundidad. Si está muy seco, realiza un riego ligero.\n\n*Nota: Esta es una orientación inicial simulada.*`,
+          text: `**Análisis de AgroAlerta IA:**\n\nHe recibido tu información. Parece que tu cultivo está en buen estado general, pero te recomiendo vigilar la humedad en las mañanas.\n\n*Nota: Esta es una respuesta simulada de la Fase 4.*`,
           timestamp: serverTimestamp(),
           status: 'responded'
         };
@@ -117,6 +110,6 @@ export const ChatService = {
       } catch (e) {
         console.error("Error en respuesta simulada:", e);
       }
-    }, 2500);
+    }, 2000);
   }
 };

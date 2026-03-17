@@ -1,40 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isSignedIn() {
-      return request.auth != null;
+    // Regla maestra: El usuario tiene acceso total a cualquier dato dentro de su propia ruta /users/{userId}
+    // Esto incluye crops, notes, chatMessages, etc. de forma automática y segura.
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // Reglas para el perfil de usuario y sus datos anidados
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
-
-      // Reglas para cultivos y sus subcolecciones
-      match /crops/{cropId} {
-        allow read, write: if isOwner(userId);
-
-        match /notes/{noteId} {
-          allow read, write: if isOwner(userId);
-        }
-
-        match /recommendations/{recommendationId} {
-          allow read, write: if isOwner(userId);
-        }
-
-        match /chatMessages/{chatMessageId} {
-          // Simplificamos al máximo: si eres dueño de la ruta /users/{userId}, puedes leer/escribir mensajes
-          allow read, write: if isOwner(userId);
-        }
-
-        match /irrigationLogs/{irrigationLogId} {
-          allow read, write: if isOwner(userId);
-        }
-      }
-    }
+    
+    // Forzamos despliegue con este comentario para asegurar sincronización de reglas.
   }
 }
