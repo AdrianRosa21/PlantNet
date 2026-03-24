@@ -1,14 +1,14 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Regla de Oro: El usuario es dueño de todo lo que esté bajo su /users/{userId}
-    // Esto cubre crops, notes, chatMessages, irrigationLogs, etc.
-    match /users/{userId}/{allPaths=**} {
+    // REGLA MAESTRA: El usuario autenticado tiene acceso total a SU carpeta
+    // Esto cubre crops, notes, chatMessages e id de usuario
+    match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Forzamos actualización de reglas para el Chat IA
-    match /users/{userId}/crops/{cropId}/chatMessages/{messageId} {
+    // Regla de respaldo para el nodo de usuario
+    match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
