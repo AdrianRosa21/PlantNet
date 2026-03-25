@@ -4,6 +4,8 @@ import {
   collection, 
   doc,
   setDoc,
+  getDoc,
+  updateDoc,
   serverTimestamp, 
   Firestore 
 } from 'firebase/firestore';
@@ -15,6 +17,7 @@ import {
 } from 'firebase/storage';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { analyzeCropHealth } from '@/ai/flows/analyze-crop-health';
 
 export interface ChatMessageData {
   id: string;
@@ -41,80 +44,120 @@ export const ChatService = {
     imageFile?: File
   ) {
     let imageUrl = '';
+    let base64DataUri = '';
 
-    // 1. Subida a Storage si hay imagen
+    // 0. Validar Límites (Freemium)
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return { success: false, error: "Usuario no encontrado." };
+    
+    const userData = userSnap.data();
+    if (userData.tipo_cuenta === 'gratuita' && (userData.consultas_ia_mes || 0) >= 5) {
+      return { success: false, error: "Has alcanzado tu límite mensual de 5 consultas gratuitas. Mejora a Premium." };
+    }
+
+    // 1. Obtener datos del Cultivo para contexto de IA
+    const cropRef = doc(db, 'users', userId, 'crops', cropId);
+    const cropSnap = await getDoc(cropRef);
+    const cropType = cropSnap.exists() ? cropSnap.data().type : "Planta Desconocida";
+
+    // 2. Subida a Storage si hay imagen y conversión a Base64 para Genkit
     if (imageFile) {
       try {
         const fileName = `${Date.now()}_${imageFile.name.replace(/\s+/g, '_')}`;
-        // Usamos una ruta más simple para evitar conflictos de permisos
         const storagePath = `users/${userId}/${fileName}`;
         const storageRef = ref(storage, storagePath);
         
         const snapshot = await uploadBytes(storageRef, imageFile);
         imageUrl = await getDownloadURL(snapshot.ref);
+
+        // Convertir a Data URI
+        base64DataUri = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(imageFile);
+        });
       } catch (error: any) {
-        console.error("Error en Storage:", error);
-        throw new Error("No se pudo subir la imagen. Revisa los permisos de Storage.");
+        console.error("ERROR DETALLADO EN STORAGE/IMAGEN:", error);
+        throw new Error("No se pudo procesar la imagen o faltan permisos en el Storage: " + (error?.message || ""));
       }
     }
 
-    // 2. Preparar el mensaje para Firestore
+    // 3. Preparar y guardar el mensaje del usuario en Firestore
     const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
-    const messageId = doc(messagesRef).id;
+    const userMsgId = doc(messagesRef).id;
     
     const userMessage: ChatMessageData = {
-      id: messageId,
+      id: userMsgId,
       userId: userId,
       cropId: cropId,
       messageType: 'user',
-      text: text.trim() || (imageUrl ? "Imagen para analizar" : "..."),
+      text: text.trim() || (imageUrl ? "Analiza esta imagen, por favor." : "..."),
       timestamp: serverTimestamp(),
       status: 'sent'
     };
+    if (imageUrl) userMessage.imageUrl = imageUrl;
 
-    if (imageUrl) {
-      userMessage.imageUrl = imageUrl;
+    await setDoc(doc(messagesRef, userMsgId), userMessage);
+    
+    // 4. Actualizar contador de consultas si es gratuita
+    if (userData.tipo_cuenta === 'gratuita') {
+      await updateDoc(userRef, {
+        consultas_ia_mes: userData.consultas_ia_mes + 1
+      });
     }
 
-    // 3. Guardar mensaje en Firestore
-    try {
-      const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
-      await setDoc(messageDocRef, userMessage);
-      
-      // 4. Iniciar respuesta simulada
-      this.generateSimulatedResponse(db, userId, cropId);
-    } catch (error: any) {
-      console.error("Error en Firestore:", error);
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: `users/${userId}/crops/${cropId}/chatMessages/${messageId}`,
-        operation: 'create',
-        requestResourceData: userMessage
-      }));
-      throw error;
-    }
+    // 5. Llamar a Genkit de Google (Server Action real)
+    this.generateRealAIResponse(db, userId, cropId, cropType, userMessage.text, base64DataUri);
   },
 
-  async generateSimulatedResponse(db: Firestore, userId: string, cropId: string) {
-    setTimeout(async () => {
-      try {
-        const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
-        const messageId = doc(messagesRef).id;
-        
-        const systemMessage: ChatMessageData = {
-          id: messageId,
-          userId: userId,
-          cropId: cropId,
-          messageType: 'system',
-          text: `**AgroAlerta IA - Análisis de Cultivo**\n\nHe recibido tu información. Analizando los datos de tu cultivo, te recomiendo mantener una observación constante sobre la humedad del suelo.\n\n⚠️ **Sugerencia:** Asegúrate de que el drenaje sea óptimo.\n✅ **Próximo paso:** Revisa las hojas en busca de manchas amarillas.\n\n*Respuesta automática del sistema.*`,
-          timestamp: serverTimestamp(),
-          status: 'responded'
-        };
+  async generateRealAIResponse(
+    db: Firestore, 
+    userId: string, 
+    cropId: string, 
+    cropType: string, 
+    symptomsText: string,
+    photoDataUri?: string
+  ) {
+    try {
+      // Llamar al flow the Genkit
+      const aiResponse = await analyzeCropHealth({
+        cropType: cropType,
+        symptomsDescription: symptomsText,
+        ...(photoDataUri && { photoDataUri })
+      });
 
-        const messageDocRef = doc(db, 'users', userId, 'crops', cropId, 'chatMessages', messageId);
-        await setDoc(messageDocRef, systemMessage);
-      } catch (e) {
-        console.error("Error en respuesta simulada:", e);
-      }
-    }, 2000);
+      // La IA ahora es conversacional
+      const systemResponseText = aiResponse.message;
+
+      // Guardar el mensaje del sistema
+      const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
+      const systemMsgId = doc(messagesRef).id;
+        
+      const systemMessage: ChatMessageData = {
+        id: systemMsgId,
+        userId: userId,
+        cropId: cropId,
+        messageType: 'system',
+        text: systemResponseText,
+        timestamp: serverTimestamp(),
+        status: 'responded'
+      };
+
+      await setDoc(doc(messagesRef, systemMsgId), systemMessage);
+    } catch (e) {
+      console.error("Error consultando Genkit:", e);
+      // Guardar un mensaje de error si falla
+      const messagesRef = collection(db, 'users', userId, 'crops', cropId, 'chatMessages');
+      await setDoc(doc(messagesRef, doc(messagesRef).id), {
+        id: doc(messagesRef).id,
+        userId: userId,
+        cropId: cropId,
+        messageType: 'system',
+        text: "Hubo un error al procesar tu consulta con la IA. Por favor, inténtalo más tarde.",
+        timestamp: serverTimestamp(),
+        status: 'responded'
+      });
+    }
   }
 };

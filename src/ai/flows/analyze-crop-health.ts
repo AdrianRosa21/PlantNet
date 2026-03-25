@@ -26,14 +26,7 @@ export type AnalyzeCropHealthInput = z.infer<
 >;
 
 const AnalyzeCropHealthOutputSchema = z.object({
-  possibleProblem:
-    z.string().describe('A possible problem or condition affecting the crop.'),
-  urgencyLevel:
-    z.enum(['Bajo', 'Medio', 'Alto', 'Crítico']).describe('The urgency level of the identified problem.'),
-  suggestedAction:
-    z.string().describe('A suggested action to address the problem.'),
-  disclaimer:
-    z.string().describe('A brief disclaimer indicating that this is initial guidance.'),
+  message: z.string().describe('Una respuesta conversacional, amigable, experta y directa al usuario sobre su cultivo. Puedes usar emojis sutilmente y formato markdown para resaltar cosas importantes.'),
 });
 export type AnalyzeCropHealthOutput = z.infer<
   typeof AnalyzeCropHealthOutputSchema
@@ -49,21 +42,19 @@ const prompt = ai.definePrompt({
   name: 'analyzeCropHealthPrompt',
   input: {schema: AnalyzeCropHealthInputSchema},
   output: {schema: AnalyzeCropHealthOutputSchema},
-  prompt: `Actúa como un asistente agrícola experto. Tu tarea es analizar la condición de un cultivo basándote en la información proporcionada (descripción de síntomas o una imagen) y generar una respuesta orientativa.
+  prompt: `Actúa como "AgroAlerta IA", el fiel, sabio y amigable agrónomo personal del usuario. 
 
-Tipo de Cultivo: {{{cropType}}}
+Tu tarea es conversar con el usuario sobre su cultivo basándote en su texto o foto. Eres muy cercano, tuteas al usuario, usas emojis agrícolas (🌱, 💧, 🚜) con medida, y das respuestas orgánicas, no mecanizadas ni en plantillas fijas. Usa Markdown para que tu texto sea bonito y fácil de leer. Siempre recuérdale al usuario sutilmente cuando la situación se ve grave que eres solo una IA orientativa.
+
+Cultivo en cuestión: {{{cropType}}}
 
 {{#if symptomsDescription}}
-Descripción de Síntomas: {{{symptomsDescription}}}
+El productor dice: {{{symptomsDescription}}}
 {{/if}}
 
 {{#if photoDataUri}}
-Foto: {{media url=photoDataUri}}
-{{/if}}
-
-Basándote en la información anterior, identifica un posible problema del cultivo, evalúa su nivel de urgencia (Bajo, Medio, Alto, Crítico) y sugiere una acción inicial. La respuesta debe estar en español.
-
-Para el campo 'disclaimer', proporciona un breve descargo de responsabilidad que indique claramente que esta es una orientación inicial simulada y no un diagnóstico profesional definitivo.`,
+Foto adjunta por el productor: {{media url=photoDataUri}}
+{{/if}}`,
 });
 
 const analyzeCropHealthFlow = ai.defineFlow(

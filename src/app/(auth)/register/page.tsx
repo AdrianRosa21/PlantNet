@@ -6,12 +6,12 @@ import { doc, setDoc } from "firebase/firestore";
 import { useFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, ArrowLeft } from "lucide-react";
+import { UserPlus, ArrowLeft, Loader2 } from "lucide-react";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -38,6 +38,9 @@ export default function RegisterPage() {
       const profileData = {
         id: user.uid,
         email: email,
+        nombre: name,
+        tipo_cuenta: "gratuita",
+        consultas_ia_mes: 0,
         createdAt: new Date().toISOString(),
       };
 
@@ -51,8 +54,8 @@ export default function RegisterPage() {
         });
 
       toast({
-        title: "Cuenta creada",
-        description: "Bienvenido a AgroAlerta IA.",
+        title: "¡Cuenta creada con éxito!",
+        description: "Bienvenido a la comunidad AgroAlerta IA.",
       });
       router.push("/dashboard");
     } catch (error: any) {
@@ -73,78 +76,97 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-6">
-      <div className="mb-2">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => router.push("/login")}
-          className="rounded-full h-10 w-10 -ml-2"
-        >
-          <ArrowLeft className="w-6 h-6 text-primary" />
-        </Button>
-      </div>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#F5F7F2]">
+      
+      {/* Tarjeta de Formulario Minimalista */}
+      <div className="w-full max-w-[360px] bg-white rounded-3xl p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-[#F0F4EC]">
+        
+        {/* Cabecera */}
+        <div className="flex flex-col items-center text-center space-y-2 mb-6 mt-1 relative">
+          
+          {/* Botón Volver Integrado */}
+          <button 
+            type="button"
+            onClick={() => router.push("/login")}
+            className="absolute left-0 top-1.5 flex items-center justify-center w-8 h-8 rounded-full text-[#6B7280] hover:bg-[#F5F7F2] hover:text-[#1F2937] transition-all outline-none"
+            aria-label="Volver"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
 
-      <div className="flex-1 flex items-center justify-center">
-        <Card className="w-full border-none shadow-none bg-transparent">
-          <CardHeader className="text-center space-y-1">
-            <div className="mx-auto w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4 shadow-xl shadow-secondary/20">
-              <UserPlus className="text-secondary-foreground w-8 h-8" />
-            </div>
-            <CardTitle className="text-3xl font-bold text-primary">Crear Cuenta</CardTitle>
-            <CardDescription>Únete a nuestra comunidad de agricultores</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nombre Completo</Label>
-                <Input 
-                  id="name" 
-                  placeholder="Juan Pérez" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="h-12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Correo Electrónico</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="ejemplo@agro.com" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="h-12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  placeholder="Mínimo 6 caracteres"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-12"
-                />
-              </div>
-              <Button type="submit" className="w-full h-12 text-lg font-semibold" disabled={isLoading}>
-                {isLoading ? "Creando cuenta..." : "Registrarse"}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <div className="text-sm text-center text-muted-foreground">
-              ¿Ya tienes una cuenta?{" "}
-              <Link href="/login" className="text-primary font-semibold hover:underline">
-                Inicia sesión
-              </Link>
-            </div>
-          </CardFooter>
-        </Card>
+          <div className="w-12 h-12 bg-[#F5F7F2] rounded-full flex items-center justify-center mb-1">
+            <UserPlus className="text-[#2E7D32] w-5 h-5 ml-0.5" />
+          </div>
+          <h1 className="text-xl font-bold tracking-tight text-[#1F2937]">Crear Cuenta</h1>
+          <p className="text-[#6B7280] text-[13px] font-medium">
+            Únete a nuestra comunidad
+          </p>
+        </div>
+
+        {/* Formulario */}
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="name" className="text-[#374151] font-medium text-[13px] ml-0.5">Nombre Completo</Label>
+            <Input 
+              id="name" 
+              placeholder="Juan Pérez" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full h-[48px] bg-white border-[#DCE5D8] rounded-xl px-4 text-[#1F2937] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#8BC34A] focus-visible:border-[#8BC34A] transition-all shadow-sm"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-[#374151] font-medium text-[13px] ml-0.5">Correo electrónico</Label>
+            <Input 
+              id="email" 
+              type="email" 
+              placeholder="ejemplo@agro.com" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full h-[48px] bg-white border-[#DCE5D8] rounded-xl px-4 text-[#1F2937] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#8BC34A] focus-visible:border-[#8BC34A] transition-all shadow-sm"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-[#374151] font-medium text-[13px] ml-0.5">Contraseña</Label>
+            <Input 
+              id="password" 
+              type="password" 
+              placeholder="Mínimo 6 caracteres"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full h-[48px] bg-white border-[#DCE5D8] rounded-xl px-4 text-[#1F2937] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#8BC34A] focus-visible:border-[#8BC34A] transition-all shadow-sm"
+            />
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full h-[48px] rounded-xl text-[14px] font-bold mt-2 bg-[#2E7D32] hover:bg-[#236026] text-white shadow-md shadow-[#2E7D32]/10 transition-all border-none" 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Registrando...
+              </>
+            ) : (
+              "Registrar Cuenta Gratis"
+            )}
+          </Button>
+        </form>
+
+        {/* Pie de página */}
+        <div className="mt-6 text-center text-[13px] text-[#6B7280] font-medium">
+          ¿Ya tienes cuenta?{" "}
+          <Link href="/login" className="text-[#2E7D32] font-bold hover:text-[#1F5422] transition-colors">
+            Inicia sesión
+          </Link>
+        </div>
+
       </div>
     </div>
   );

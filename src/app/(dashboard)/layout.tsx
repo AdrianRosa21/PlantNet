@@ -3,7 +3,7 @@
 import { AuthGuard } from "@/components/auth-guard";
 import { useAuth, useUser } from "@/firebase";
 import { Button } from "@/components/ui/button";
-import { LogOut, LayoutDashboard, User, Settings, Leaf } from "lucide-react";
+import { LogOut, LayoutDashboard, User, Settings, Leaf, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -55,6 +55,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}>
             <User className="w-6 h-6" />
             <span className="text-[10px] font-medium">Perfil</span>
+          </Link>
+          <Link href="/premium" className={cn(
+            "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors",
+            pathname === "/premium" ? "text-amber-500 bg-amber-50" : "text-muted-foreground"
+          )}>
+            <Sparkles className="w-6 h-6" />
+            <span className="text-[10px] font-medium">Planes PRO</span>
           </Link>
           <Link href="/settings" className={cn(
             "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors",

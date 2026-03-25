@@ -8,9 +8,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Leaf } from "lucide-react";
+import { Leaf, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -27,15 +26,15 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({
-        title: "Bienvenido",
+        title: "¡Bienvenido de vuelta!",
         description: "Sesión iniciada correctamente.",
       });
       router.push("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Credenciales inválidas. Inténtalo de nuevo.",
+        title: "Error de acceso",
+        description: "Credenciales inválidas. Verifica tu correo y contraseña.",
       });
     } finally {
       setIsLoading(false);
@@ -43,54 +42,75 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center p-6">
-      <Card className="w-full border-none shadow-none bg-transparent">
-        <CardHeader className="text-center space-y-1">
-          <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-xl shadow-primary/20">
-            <Leaf className="text-white w-10 h-10" />
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#F5F7F2]">
+      
+      {/* Tarjeta de Formulario Minimalista */}
+      <div className="w-full max-w-[360px] bg-white rounded-3xl p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-[#F0F4EC]">
+        
+        {/* Cabecera */}
+        <div className="flex flex-col items-center text-center space-y-2 mb-6 mt-1">
+          <div className="w-12 h-12 bg-[#F5F7F2] rounded-full flex items-center justify-center mb-1">
+            <Leaf className="text-[#2E7D32] w-5 h-5" />
           </div>
-          <CardTitle className="text-3xl font-bold text-primary">AgroAlerta IA</CardTitle>
-          <CardDescription>Inicia sesión para gestionar tus cultivos</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Correo Electrónico</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="ejemplo@agro.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="h-12"
-              />
-            </div>
-            <Button type="submit" className="w-full h-12 text-lg font-semibold" disabled={isLoading}>
-              {isLoading ? "Cargando..." : "Entrar"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <div className="text-sm text-center text-muted-foreground">
-            ¿No tienes una cuenta?{" "}
-            <Link href="/register" className="text-primary font-semibold hover:underline">
-              Regístrate aquí
-            </Link>
+          <h1 className="text-xl font-bold tracking-tight text-[#1F2937]">Ingresar a la cuenta</h1>
+          <p className="text-[#6B7280] text-[13px] font-medium">
+            Bienvenido de nuevo a AgroAlerta
+          </p>
+        </div>
+
+        {/* Formulario */}
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-[#374151] font-medium text-[13px] ml-0.5">Correo electrónico</Label>
+            <Input 
+              id="email" 
+              type="email" 
+              placeholder="ejemplo@agro.com" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full h-[48px] bg-white border-[#DCE5D8] rounded-xl px-4 text-[#1F2937] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#8BC34A] focus-visible:border-[#8BC34A] transition-all shadow-sm"
+            />
           </div>
-        </CardFooter>
-      </Card>
+          
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-[#374151] font-medium text-[13px] ml-0.5">Contraseña</Label>
+            <Input 
+              id="password" 
+              type="password" 
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full h-[48px] bg-white border-[#DCE5D8] rounded-xl px-4 text-[#1F2937] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#8BC34A] focus-visible:border-[#8BC34A] transition-all shadow-sm"
+            />
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full h-[48px] rounded-xl text-[14px] font-bold mt-2 bg-[#2E7D32] hover:bg-[#236026] text-white shadow-md shadow-[#2E7D32]/10 transition-all border-none" 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verificando...
+              </>
+            ) : (
+              "Iniciar Sesión"
+            )}
+          </Button>
+        </form>
+
+        {/* Pie de página */}
+        <div className="mt-6 text-center text-[13px] text-[#6B7280] font-medium">
+          ¿No tienes una cuenta aún?{" "}
+          <Link href="/register" className="text-[#2E7D32] font-bold hover:text-[#1F5422] transition-colors">
+            Regístrate aquí
+          </Link>
+        </div>
+
+      </div>
     </div>
   );
 }
