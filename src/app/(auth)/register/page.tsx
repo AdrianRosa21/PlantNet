@@ -6,12 +6,11 @@ import { doc, setDoc } from "firebase/firestore";
 import { useFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, ArrowLeft, Loader2 } from "lucide-react";
+import { UserPlus, ArrowLeft, Loader2, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -19,6 +18,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -75,98 +75,167 @@ export default function RegisterPage() {
     }
   };
 
+  const handleGoogleRegister = () => {
+    toast({
+      title: "Próximamente",
+      description: "La integración con Google estará lista en la versión final.",
+    });
+  };
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#F5F7F2]">
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4 bg-slate-50 overflow-hidden">
       
-      {/* Tarjeta de Formulario Minimalista */}
-      <div className="w-full max-w-[360px] bg-white rounded-3xl p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-[#F0F4EC]">
-        
-        {/* Cabecera */}
-        <div className="flex flex-col items-center text-center space-y-2 mb-6 mt-1 relative">
+      {/* BACKGROUND PREMIUM (Bubbly / Mesh Gradient) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-400/20 blur-[100px] mix-blend-multiply animate-pulse" />
+        <div className="absolute top-[30%] -right-[15%] w-[60%] h-[60%] rounded-full bg-amber-200/20 blur-[120px] mix-blend-multiply opacity-70" />
+        <div className="absolute -bottom-[20%] left-[20%] w-[50%] h-[50%] rounded-full bg-teal-400/20 blur-[100px] mix-blend-multiply opacity-50" />
+        <div className="absolute inset-0 bg-white/40 backdrop-blur-[50px] z-0" />
+      </div>
+
+      {/* Tarjeta Glassmorphic */}
+      <div className="relative z-10 w-full max-w-[400px] animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out mt-4 sm:mt-0">
+        <div className="bg-white/70 backdrop-blur-3xl rounded-3xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.08)] border border-white/60 relative">
           
-          {/* Botón Volver Integrado */}
           <button 
             type="button"
             onClick={() => router.push("/login")}
-            className="absolute left-0 top-1.5 flex items-center justify-center w-8 h-8 rounded-full text-[#6B7280] hover:bg-[#F5F7F2] hover:text-[#1F2937] transition-all outline-none"
+            className="absolute left-6 top-6 flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:bg-slate-100/50 hover:text-slate-700 transition-all outline-none"
             aria-label="Volver"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
           </button>
 
-          <div className="w-12 h-12 bg-[#F5F7F2] rounded-full flex items-center justify-center mb-1">
-            <UserPlus className="text-[#2E7D32] w-5 h-5 ml-0.5" />
+          {/* Cabecera WOW */}
+          <div className="flex flex-col items-center text-center space-y-3 mb-8 mt-6 sm:mt-2">
+            <div className="relative w-16 h-16 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-2 before:absolute before:inset-0 before:bg-white/20 before:rounded-2xl before:scale-105 before:animate-ping before:duration-3000">
+              <UserPlus className="text-white w-7 h-7 relative z-10 ml-1" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black tracking-tight text-slate-800 bg-clip-text text-transparent bg-gradient-to-r from-emerald-800 to-teal-600 pb-1">
+                Crear Cuenta
+              </h1>
+              <p className="text-slate-500 text-sm font-medium mt-1">
+                Únete a la evolución agrícola
+              </p>
+            </div>
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-[#1F2937]">Crear Cuenta</h1>
-          <p className="text-[#6B7280] text-[13px] font-medium">
-            Únete a nuestra comunidad
-          </p>
+
+          {/* Formulario */}
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-slate-700 font-semibold text-[13px] ml-1">Nombre y Apellido</Label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                </div>
+                <Input 
+                  id="name" 
+                  placeholder="Juan Pérez" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="pl-11 h-12 bg-white/50 border-white/80 rounded-xl text-slate-800 placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all font-medium text-[15px]"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-slate-700 font-semibold text-[13px] ml-1">Correo electrónico</Label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                </div>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="productor@ejemplo.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="pl-11 h-12 bg-white/50 border-white/80 rounded-xl text-slate-800 placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all font-medium text-[15px]"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-slate-700 font-semibold text-[13px] ml-1">Contraseña</Label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                </div>
+                <Input 
+                  id="password" 
+                  type={showPassword ? "text" : "password"}  
+                  placeholder="Mínimo 6 caracteres"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className={`pl-11 pr-11 h-12 bg-white/50 border-white/80 rounded-xl text-slate-800 placeholder:text-slate-400 placeholder:tracking-normal focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all text-lg ${!showPassword && password.length > 0 ? "tracking-widest" : "tracking-normal"}`}
+                />
+                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-slate-400 hover:text-emerald-500 focus:outline-none transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full h-12 rounded-xl text-[15px] font-bold mt-6 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white shadow-lg shadow-emerald-500/25 transition-all border-none relative overflow-hidden group" 
+              disabled={isLoading}
+            >
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin relative z-10" />
+                  <span className="relative z-10">Registrando...</span>
+                </>
+              ) : (
+                <span className="relative z-10 flex items-center gap-2">Comienza Gratis</span>
+              )}
+            </Button>
+          </form>
+
+          {/* Social Auth (WOW Effect Mock) */}
+          <div className="mt-6">
+            <div className="relative flex items-center py-2">
+              <div className="flex-grow border-t border-slate-200/70"></div>
+              <span className="flex-shrink-0 mx-3 text-slate-500 text-xs font-medium uppercase tracking-wide">Registro rápido</span>
+              <div className="flex-grow border-t border-slate-200/70"></div>
+            </div>
+
+            <Button 
+              type="button"
+              variant="outline"
+              onClick={handleGoogleRegister}
+              className="w-full h-12 mt-6 rounded-xl font-semibold bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm transition-all"
+            >
+              <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                <path d="M1 1h22v22H1z" fill="none"/>
+              </svg>
+              Continuar con Google
+            </Button>
+          </div>
+
+          {/* Pie de página */}
+          <div className="mt-8 text-center text-[13px] text-slate-500 font-medium">
+            ¿Ya tienes cuenta?{" "}
+            <Link href="/login" className="text-emerald-600 font-bold hover:text-teal-600 hover:underline underline-offset-4 transition-all">
+              Inicia sesión aquí
+            </Link>
+          </div>
+
         </div>
-
-        {/* Formulario */}
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="name" className="text-[#374151] font-medium text-[13px] ml-0.5">Nombre Completo</Label>
-            <Input 
-              id="name" 
-              placeholder="Juan Pérez" 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full h-[48px] bg-white border-[#DCE5D8] rounded-xl px-4 text-[#1F2937] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#8BC34A] focus-visible:border-[#8BC34A] transition-all shadow-sm"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-[#374151] font-medium text-[13px] ml-0.5">Correo electrónico</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="ejemplo@agro.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full h-[48px] bg-white border-[#DCE5D8] rounded-xl px-4 text-[#1F2937] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#8BC34A] focus-visible:border-[#8BC34A] transition-all shadow-sm"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-[#374151] font-medium text-[13px] ml-0.5">Contraseña</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              placeholder="Mínimo 6 caracteres"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full h-[48px] bg-white border-[#DCE5D8] rounded-xl px-4 text-[#1F2937] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#8BC34A] focus-visible:border-[#8BC34A] transition-all shadow-sm"
-            />
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full h-[48px] rounded-xl text-[14px] font-bold mt-2 bg-[#2E7D32] hover:bg-[#236026] text-white shadow-md shadow-[#2E7D32]/10 transition-all border-none" 
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Registrando...
-              </>
-            ) : (
-              "Registrar Cuenta Gratis"
-            )}
-          </Button>
-        </form>
-
-        {/* Pie de página */}
-        <div className="mt-6 text-center text-[13px] text-[#6B7280] font-medium">
-          ¿Ya tienes cuenta?{" "}
-          <Link href="/login" className="text-[#2E7D32] font-bold hover:text-[#1F5422] transition-colors">
-            Inicia sesión
-          </Link>
-        </div>
-
       </div>
     </div>
   );

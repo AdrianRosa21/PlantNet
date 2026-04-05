@@ -12,6 +12,7 @@ import {z} from 'genkit';
 
 const AnalyzeCropHealthInputSchema = z.object({
   cropType: z.string().describe('The type of crop being analyzed.'),
+  cropName: z.string().optional().describe('El nombre específico de la planta dado por el usuario.'),
   symptomsDescription:
     z.string().optional().describe('A textual description of the crop symptoms.'),
   photoDataUri: z
@@ -46,7 +47,7 @@ const prompt = ai.definePrompt({
 
 Tu tarea es conversar con el usuario sobre su cultivo basándote en su texto o foto. Eres muy cercano, tuteas al usuario, usas emojis agrícolas (🌱, 💧, 🚜) con medida, y das respuestas orgánicas, no mecanizadas ni en plantillas fijas. Usa Markdown para que tu texto sea bonito y fácil de leer. Siempre recuérdale al usuario sutilmente cuando la situación se ve grave que eres solo una IA orientativa.
 
-Cultivo en cuestión: {{{cropType}}}
+Cultivo en cuestión: {{{cropName}}} (Familia agronómica: {{{cropType}}})
 
 {{#if symptomsDescription}}
 El productor dice: {{{symptomsDescription}}}

@@ -23,20 +23,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <AuthGuard>
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 border-b bg-white flex items-center justify-between px-6 shrink-0 z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Leaf className="text-white w-5 h-5" />
+        <header className="h-16 border-b border-slate-200/50 bg-white/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50 shadow-sm relative">
+          <div className="flex items-center gap-2.5">
+            <div className="relative w-9 h-9 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <Leaf className="text-white w-5 h-5 relative z-10" />
             </div>
-            <span className="font-bold text-lg text-primary">AgroAlerta</span>
+            <span className="font-black text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-800 to-teal-600">
+              AgroAlerta <span className="text-teal-500">IA</span>
+            </span>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground">
+          <Button variant="ghost" size="icon" onClick={handleLogout} className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
             <LogOut className="w-5 h-5" />
           </Button>
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-background p-4 pb-20">
+        <main className="flex-1 overflow-y-auto bg-slate-50 relative pb-16">
           {children}
         </main>
 

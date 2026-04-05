@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { verifyCropCreation } from "@/ai/flows/verify-crop-creation";
+import { DashboardTour } from "@/components/dashboard-tour";
 
 const CROP_ICONS = [
   { name: "Sprout", icon: Sprout },
@@ -94,8 +95,8 @@ export default function DashboardPage() {
   const getCropWeatherAlert = (idealTemp: number) => {
     if (!weather) return null;
     const diff = weather.temp - idealTemp;
-    if (diff > 5) return { type: "heat", text: "¡Mucho Calor!", icon: Flame, color: "text-red-600", bg: "bg-red-50", border: "border-red-100" };
-    if (diff < -5) return { type: "cold", text: "¡Mucho Frío!", icon: Snowflake, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" };
+    if (diff > 5) return { type: "heat", text: "¡Mucho Calor!", icon: Flame, badgeColor: "bg-red-500", glow: "shadow-red-500/40", textCol: "text-red-700", bgCol: "bg-red-50/80" };
+    if (diff < -5) return { type: "cold", text: "¡Mucho Frío!", icon: Snowflake, badgeColor: "bg-blue-500", glow: "shadow-blue-500/40", textCol: "text-blue-700", bgCol: "bg-blue-50/80" };
     return null;
   };
 
@@ -165,160 +166,215 @@ export default function DashboardPage() {
   const getCropIconComponent = (iconName: string) => {
     const iconObj = CROP_ICONS.find(i => i.name === iconName) || CROP_ICONS[0];
     const IconComponent = iconObj.icon;
-    return <IconComponent className="w-7 h-7 text-primary" />;
+    return <IconComponent className="w-7 h-7 text-emerald-600" />;
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold tracking-tight text-primary flex items-center gap-2">
-            ¡Hola, {user?.displayName?.split(' ')[0] || 'Productor'}! 👋
-          </h1>
-          <div className="flex items-center gap-3">
-            <p className="text-muted-foreground text-sm hidden sm:block">Gestiona tus cultivos inteligentes.</p>
-            <Link href="/premium">
-              <Badge variant="outline" className="text-xs py-1 px-3 bg-gradient-to-r from-amber-100 to-amber-50 text-amber-700 border-amber-300 hover:from-amber-200 hover:to-amber-100 cursor-pointer shadow-sm transition-all rounded-full flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" />
-                Explorar Planes PRO
-              </Badge>
-            </Link>
-          </div>
-        </div>
-        
-        <Button 
-          onClick={handleAddCropClick}
-          className="rounded-full w-14 h-14 shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-          size="icon"
-        >
-          <Plus className="w-8 h-8" />
-        </Button>
+    <div className="relative min-h-[calc(100vh-80px)] w-full overflow-hidden bg-slate-50">
+      
+      {/* MESH GRADIENT BACKGROUND (Efecto Terrario Vivo) */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-0 -left-[10%] w-[60%] h-[50%] rounded-full bg-emerald-400/20 blur-[120px] mix-blend-multiply animate-pulse" />
+        <div className="absolute top-[20%] -right-[15%] w-[70%] h-[60%] rounded-full bg-amber-200/20 blur-[140px] mix-blend-multiply opacity-60" />
+        <div className="absolute top-[60%] left-[20%] w-[50%] h-[50%] rounded-full bg-teal-400/15 blur-[100px] mix-blend-multiply opacity-50" />
+        <div className="absolute inset-0 bg-white/40 backdrop-blur-[40px]" />
       </div>
 
-      {/* CLIMA WIDGET (OPEN METEO) */}
-      {weatherLoading ? (
-        <div className="h-28 bg-slate-100 animate-pulse rounded-3xl" />
-      ) : weather ? (
-        <Card className="rounded-3xl border-none shadow-md overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 text-white relative">
-          <div className="absolute top-0 right-0 p-4 opacity-20 transform translate-x-4 -translate-y-4">
-            {getWeatherIcon(weather.code, "w-32 h-32 text-white")}
-          </div>
-          <CardContent className="p-6 flex flex-col justify-between relative z-10">
-            <div className="flex items-center gap-2 mb-2 opacity-90 text-sm font-medium">
-              <MapPin className="w-4 h-4" />
-              {weather.city || "Tu Ubicación"}
-            </div>
-            <div className="flex items-end gap-3">
-              <span className="text-5xl font-extrabold tracking-tighter shadow-sm">{Math.round(weather.temp)}°</span>
-              <div className="flex flex-col pb-1">
-                <span className="font-semibold text-lg leading-tight">{weather.code <= 1 ? "Soleado" : "Nublado/Lluvia"}</span>
-                <span className="text-xs opacity-80">Condiciones en tiempo real</span>
+      <div className="relative z-10 w-full space-y-6 max-w-3xl mx-auto p-4 sm:p-6 pb-28 pt-6">
+        
+        {/* HEADER WOW */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 animate-in slide-in-from-left-4 duration-700 ease-out">
+              <h1 className="flex items-center gap-2 text-3xl font-black tracking-tight">
+                <span className="bg-clip-text text-transparent bg-gradient-to-br from-emerald-800 to-teal-600">¡Hola, {user?.displayName?.split(' ')[0] || 'Productor'}!</span> 
+                <span className="drop-shadow-sm inline-block">👋</span>
+              </h1>
+              <div className="ml-1 sm:ml-2">
+                <DashboardTour />
               </div>
             </div>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {/* LISTA DE CULTIVOS */}
-      <div className="grid gap-4">
-        {crops && crops.length > 0 ? (
-          crops.map((crop) => {
-            const tempAlert = getCropWeatherAlert(crop.idealTemperature || 24);
-            return (
-              <Link key={crop.id} href={`/crops/${crop.id}`}>
-                <Card className="overflow-hidden hover:border-primary/50 transition-all group active:scale-[0.98] border border-slate-100 shadow-sm bg-white">
-                  <CardContent className="p-4 flex flex-col gap-3">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                        {getCropIconComponent(crop.icon)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-lg truncate text-foreground">{crop.name}</h3>
-                          <Badge variant="secondary" className="text-[10px] h-5 bg-secondary/20 text-secondary-foreground border-none uppercase tracking-wider">{crop.type}</Badge>
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1.5">
-                          <span className="flex items-center gap-1.5 font-medium">
-                            <Droplets className="w-3.5 h-3.5 text-blue-500" />
-                            {crop.dailyIrrigationGoal} / día
-                          </span>
-                          <span className="flex items-center gap-1.5 font-medium">
-                            <Thermometer className="w-3.5 h-3.5 text-orange-500" />
-                            {crop.idealTemperature}°C Ideal
-                          </span>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                    
-                    {/* ALERTA DE CLIMA INTEGRADA */}
-                    {tempAlert && (
-                      <div className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold animate-in fade-in", tempAlert.bg, tempAlert.color, tempAlert.border)}>
-                        <tempAlert.icon className="w-4 h-4" />
-                        {tempAlert.text} Revisa tu planta para protegerla.
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+            <div className="flex items-center gap-3 animate-in slide-in-from-left-4 duration-1000 ease-out">
+              <p className="text-slate-500 font-medium text-sm hidden sm:block">Panel central de tus cultivos inteligentes.</p>
+              <Link href="/premium">
+                <Badge variant="outline" className="text-xs py-1 px-3 bg-gradient-to-r from-amber-200 to-amber-100 text-amber-800 border-amber-300/50 hover:from-amber-300 hover:to-amber-200 cursor-pointer shadow-sm shadow-amber-500/10 transition-all rounded-full flex items-center gap-1 font-bold">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Planes PRO
+                </Badge>
               </Link>
-            );
-          })
-        ) : (
-          <Card className="border-dashed border-2 flex flex-col items-center justify-center py-16 text-center gap-4 bg-transparent border-primary/20 shadow-none">
-            <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center">
-              <Sprout className="w-10 h-10 text-primary/30" />
             </div>
-            <div className="space-y-1">
-              <CardTitle className="text-xl font-bold text-primary/40">Sin cultivos aún</CardTitle>
-              <p className="text-sm text-muted-foreground max-w-[240px] mx-auto">
-                Toca el botón "+" para que la IA registre tu primer cultivo inteligente.
+          </div>
+          
+          <Button 
+            id="tour-add-crop"
+            onClick={handleAddCropClick}
+            className="flex-shrink-0 relative rounded-2xl w-14 h-14 bg-gradient-to-tr from-emerald-500 to-teal-400 border-none shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-1 active:scale-95 transition-all outline-none group animate-in zoom-in duration-500"
+            size="icon"
+          >
+            <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
+          </Button>
+        </div>
+
+        {/* CLIMA WIDGET (Ventana Atmosférica Glassmorphism) */}
+        {weatherLoading ? (
+          <div className="h-32 bg-white/30 backdrop-blur-md animate-pulse border border-white/40 rounded-3xl" />
+        ) : weather ? (
+          <div className="animate-in slide-in-from-bottom-8 duration-700 ease-out delay-100">
+            <Card id="tour-weather" className="rounded-[2rem] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.06)] overflow-hidden bg-gradient-to-br from-sky-400/90 to-indigo-600/90 backdrop-blur-xl text-white relative">
+              <div className="absolute top-0 right-0 p-4 opacity-30 transform translate-x-4 -translate-y-4 pointer-events-none drop-shadow-2xl">
+                {getWeatherIcon(weather.code, "w-36 h-36 text-white drop-shadow-xl")}
+              </div>
+              <CardContent className="p-6 md:p-8 flex flex-col justify-between relative z-10">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md py-1.5 px-3 rounded-full text-xs font-semibold shadow-inner border border-white/10">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {weather.city || "Tu Ubicación"}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+                    </span>
+                    <span className="text-[10px] uppercase font-bold tracking-widest opacity-90">Tiempo Real</span>
+                  </div>
+                </div>
+                <div className="flex items-end gap-3 mt-2">
+                  <span className="text-6xl font-black tracking-tighter drop-shadow-md">{Math.round(weather.temp)}°</span>
+                  <div className="flex flex-col pb-2">
+                    <span className="font-bold text-xl leading-tight drop-shadow-md">{weather.code <= 1 ? "Soleado" : "Lluvia / Nubosidad"}</span>
+                    <span className="text-xs font-medium opacity-80 uppercase tracking-widest mt-1">Clima Estimado</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : null}
+
+        {/* LISTA DE CULTIVOS (Floating Glass Cards) */}
+        <div className="grid gap-4 mt-2">
+          {crops && crops.length > 0 ? (
+            crops.map((crop, index) => {
+              const tempAlert = getCropWeatherAlert(crop.idealTemperature || 24);
+              return (
+                <div key={crop.id} className="animate-in slide-in-from-bottom-8 duration-700 ease-out" style={{ animationDelay: `${200 + index * 100}ms` }}>
+                  <Link href={`/crops/${crop.id}`}>
+                    <Card className="rounded-[1.5rem] overflow-hidden hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] hover:bg-white/80 transition-all group active:scale-[0.98] border border-white/60 shadow-sm bg-white/60 backdrop-blur-xl relative">
+                      <CardContent className="p-4 md:p-5 flex flex-col gap-3">
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-50 flex items-center justify-center shrink-0 group-hover:from-emerald-200 group-hover:to-teal-100 transition-colors shadow-inner border border-emerald-500/10">
+                            {getCropIconComponent(crop.icon)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <h3 className="font-black text-xl truncate text-slate-800">{crop.name}</h3>
+                              <Badge variant="secondary" className="text-[9px] h-5 bg-emerald-100 text-emerald-800 border border-emerald-200/50 uppercase tracking-widest font-bold hidden sm:inline-flex">{crop.type}</Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-slate-500 mt-1 font-semibold">
+                              <span className="flex items-center gap-1.5">
+                                <Droplets className="w-4 h-4 text-blue-500 drop-shadow-sm" />
+                                {crop.dailyIrrigationGoal} / día
+                              </span>
+                              <span className="flex items-center gap-1.5">
+                                <Thermometer className="w-4 h-4 text-orange-500 drop-shadow-sm" />
+                                {crop.idealTemperature}°C Ideal
+                              </span>
+                            </div>
+                          </div>
+                          <div className="w-10 h-10 rounded-full bg-slate-100/50 flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
+                            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                          </div>
+                        </div>
+                        
+                        {/* ALERTA DE CLIMA INTEGRADA (Pill Radar) */}
+                        {tempAlert && (
+                          <div className={cn("flex items-center gap-2.5 px-4 py-2.5 rounded-xl border font-semibold mt-1", tempAlert.bgCol, tempAlert.textCol, "border-transparent shadow-sm backdrop-blur-sm")}>
+                            <span className="relative flex h-3 w-3">
+                              <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", tempAlert.badgeColor)}></span>
+                              <span className={cn("relative inline-flex rounded-full h-3 w-3 shadow-inner", tempAlert.badgeColor)}></span>
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <tempAlert.icon className="w-4 h-4" />
+                              <span className="text-xs uppercase tracking-wider">{tempAlert.text}</span>
+                            </div>
+                            <span className="text-xs opacity-80 hidden sm:inline-block ml-auto">- Peligro en salud vegetal. Revisa hoy.</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
+              );
+            })
+          ) : (
+            <div className="animate-in fade-in duration-1000">
+              <Card className="rounded-[2rem] border-dashed border-2 flex flex-col items-center justify-center py-20 text-center gap-5 bg-white/40 backdrop-blur-sm border-emerald-500/20 shadow-none">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-emerald-400 rounded-full blur-xl opacity-20 animate-pulse" />
+                  <div className="w-24 h-24 rounded-full bg-emerald-100/50 flex items-center justify-center border border-white shadow-inner relative z-10">
+                    <Sprout className="w-12 h-12 text-emerald-600 drop-shadow-sm" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">Tu huerto está vacío</h3>
+                  <p className="text-sm font-medium text-slate-500 max-w-[260px] mx-auto text-balance">
+                    Toca el botón magnífico <span className="text-emerald-600 font-bold">+</span> arriba para que nuestra IA registre tu primera obra botánica.
+                  </p>
+                </div>
+              </Card>
+            </div>
+          )}
+        </div>
+
+        {/* PIE "El clima importa" (Glass Footer) */}
+        <div className="mt-8 animate-in slide-in-from-bottom-4 duration-1000 delay-300">
+          <div className="p-6 bg-white/50 backdrop-blur-xl rounded-3xl border border-white/60 flex items-start gap-4 shadow-[0_4px_24px_rgba(0,0,0,0.03)] relative overflow-hidden group hover:bg-white/60 transition-colors">
+             <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-400/10 rounded-full blur-3xl group-hover:bg-emerald-400/20 transition-colors" />
+             <div className="shrink-0 mt-1 bg-gradient-to-br from-emerald-100 to-teal-50 p-2.5 rounded-2xl shadow-sm border border-emerald-200/50 relative z-10">
+              <Leaf className="w-6 h-6 text-emerald-600 drop-shadow-sm" />
+            </div>
+            <div className="relative z-10">
+              <h3 className="font-bold text-slate-800 text-sm uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                Inteligencia Ambiental <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+              </h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-[90%]">
+                Analizamos los grados diarios 24/7 y los cruzamos con la biometría óptima recomendada por tu asistente IA (Gemini) para brindarte alertas termales oportunas.
               </p>
             </div>
-          </Card>
-        )}
+          </div>
+        </div>
+
       </div>
 
-      <div className="p-5 bg-primary/5 rounded-3xl border border-primary/10 flex items-start gap-4 shadow-inner">
-        <div className="mt-1 bg-white p-2 rounded-full shadow-sm">
-          <Leaf className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <h3 className="font-bold text-primary text-sm mb-1">El clima importa</h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Hemos cruzado los datos ambientales con las temperaturas ideales sugeridas por la IA para alertarte si debes hidratar más o resguardar del frío a tus cultivos.
-          </p>
-        </div>
-      </div>
-
-      {/* DIALOG DE CREACIÓN IA */}
+      {/* DIALOG DE CREACIÓN IA (Ahora con Glassmorphism modal base) */}
       <Dialog open={isDialogOpen} onOpenChange={(open) => {
         if (!isVerifying) {
           setIsDialogOpen(open);
           if (!open) resetForm();
         }
       }}>
-        <DialogContent className="sm:max-w-[425px] overflow-y-auto max-h-[90vh]">
-          <DialogHeader>
-            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
-              <Leaf className="w-6 h-6 text-primary" />
+        <DialogContent className="sm:max-w-[425px] overflow-hidden max-h-[90vh] bg-white/90 backdrop-blur-2xl border-white shadow-2xl rounded-3xl">
+          <DialogHeader className="pt-4">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-tr from-emerald-100 to-teal-50 rounded-2xl flex items-center justify-center mb-3 shadow-inner border border-emerald-100 relative">
+              <Leaf className="w-8 h-8 text-emerald-600 z-10" />
+              <div className="absolute inset-0 border border-emerald-400/20 rounded-2xl animate-ping opacity-50 duration-3000"></div>
             </div>
-            <DialogTitle className="text-center">Nuevo Cultivo Inteligente</DialogTitle>
-            <DialogDescription className="text-center">
-              Dinos el nombre de tu planta y la IA de AgroAlerta autocompletará mágicamente su temperatura y riegos ideales.
+            <DialogTitle className="text-center font-black text-2xl text-slate-800 tracking-tight">Nueva Planta</DialogTitle>
+            <DialogDescription className="text-center font-medium text-slate-500 text-[13px] px-2 pt-1">
+              La IA calculará térmicamente su cuidado base e identificará su familia botánica en segundos.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Selecciona un icono</Label>
+          <div className="grid gap-5 py-4">
+            <div className="grid gap-2.5">
+              <Label className="font-bold text-slate-700 text-xs uppercase tracking-wider ml-1">Icono representativo</Label>
               <div className="grid grid-cols-6 gap-2">
                 {CROP_ICONS.map((item) => (
                   <button
@@ -327,51 +383,57 @@ export default function DashboardPage() {
                     disabled={isVerifying}
                     onClick={() => setNewCrop({ ...newCrop, icon: item.name })}
                     className={cn(
-                      "flex items-center justify-center h-10 rounded-lg border-2 transition-all",
+                      "flex items-center justify-center h-12 rounded-xl border-2 transition-all",
                       newCrop.icon === item.name 
-                        ? "border-primary bg-primary/10 text-primary scale-110 shadow-sm" 
-                        : "border-transparent bg-slate-50 hover:bg-slate-100",
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-600 scale-105 shadow-md shadow-emerald-500/10" 
+                        : "border-transparent bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600",
                       isVerifying && "opacity-50 cursor-not-allowed"
                     )}
                   >
-                    <item.icon className="w-5 h-5" />
+                    <item.icon className="w-5 h-5 drop-shadow-sm" />
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="name">Nombre de la plántula</Label>
+            <div className="grid gap-2.5">
+              <Label htmlFor="name" className="font-bold text-slate-700 text-xs uppercase tracking-wider ml-1">¿Qué vamos a cuidar?</Label>
               <Input 
                 id="name" 
-                placeholder="Ej. Tomate Cherry, Lavanda..." 
+                placeholder="Ej. Tomate Cherry Mágico..." 
                 value={newCrop.name}
                 disabled={isVerifying}
                 onChange={(e) => setNewCrop({...newCrop, name: e.target.value})}
-                className="h-12 bg-slate-50 border-slate-200"
+                className="h-14 bg-white/80 border-slate-200 rounded-xl font-medium text-[15px] focus-visible:ring-emerald-500 focus-visible:border-emerald-500 placeholder:text-slate-300 shadow-sm"
                 autoComplete="off"
               />
             </div>
             
             {isVerifying && (
-              <div className="flex flex-col items-center justify-center py-6 text-center space-y-3 opacity-90">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-1">
-                   <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+              <div className="flex flex-col items-center justify-center py-8 text-center space-y-3 opacity-90 animate-in fade-in zoom-in duration-500">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-full flex items-center justify-center mb-2 relative shadow-inner">
+                   <div className="absolute inset-0 border-[3px] border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                   <Sparkles className="w-7 h-7 text-emerald-500 animate-pulse drop-shadow-sm" />
                 </div>
                 <div>
-                   <p className="text-sm font-bold text-primary">Analizando botánicamente...</p>
-                   <p className="text-[11px] text-muted-foreground mt-1">Calculando temperatura y riegos óptimos</p>
+                   <p className="text-base font-black text-emerald-700 tracking-tight">Analizando ADN vegetal</p>
+                   <p className="text-[12px] font-medium text-slate-500 mt-1 tracking-wide">Invocando el poder de Gemini...</p>
                 </div>
               </div>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="pb-2">
             <Button 
               onClick={handleCreateCrop} 
-              className="w-full h-12 text-base font-bold transition-all shadow-lg hover:shadow-primary/25"
+              className={cn(
+                "w-full h-14 text-[15px] font-black transition-all shadow-xl rounded-xl border-none",
+                !newCrop.name || isVerifying 
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed" 
+                  : "bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:scale-95"
+              )}
               disabled={!newCrop.name || isVerifying}
             >
-              {isVerifying ? "Generando cultivo..." : "Magia con IA ✨"}
+              {isVerifying ? "Contactando Servidores..." : "Desplegar Magia IA ✨"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -379,31 +441,34 @@ export default function DashboardPage() {
 
       {/* Paywall Modal Premium */}
       <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
-        <DialogContent className="sm:max-w-[400px] text-center p-6 border-amber-200">
+        <DialogContent className="sm:max-w-[400px] text-center p-8 bg-white/90 backdrop-blur-2xl border-amber-200/50 shadow-2xl rounded-[2rem]">
           <DialogHeader className="flex flex-col items-center">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4 border-4 border-amber-50">
-              <Sparkles className="w-8 h-8 text-amber-500" />
+            <div className="relative mb-5">
+              <div className="absolute inset-0 bg-amber-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
+              <div className="relative w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-50 rounded-3xl flex items-center justify-center border-2 border-white shadow-lg rotate-3">
+                <Sparkles className="w-10 h-10 text-amber-500 drop-shadow-sm" />
+              </div>
             </div>
-            <DialogTitle className="text-2xl text-slate-800 font-bold mb-2">¡Límite Alcanzado!</DialogTitle>
+            <DialogTitle className="text-3xl text-slate-800 font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-orange-500 pb-1">¡Nivel 1 Superado!</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <p className="text-sm text-slate-600 mb-4">
-              Tu cuenta gratuita solo permite monitorear un <strong>máximo de 3 cultivos</strong> simultáneamente. 
+            <p className="text-sm font-medium text-slate-600 mb-4 leading-relaxed">
+              Tu versión gratuita admite monitorear <strong>3 cultivos simultáneos</strong> con IA. Has llegado a tu límite actual. 
               <br/><br/>
-              Actualiza a la versión PRO para tener huertos ilimitados y aprovechar toda la potencia de la IA.
+              Desbloquea el huerto infinito y sube de nivel tu producción aliándote con Premium.
             </p>
           </div>
-          <DialogFooter className="flex-col sm:flex-col gap-2 w-full mt-2">
+          <DialogFooter className="flex-col sm:flex-col gap-3 w-full mt-3">
             <Button 
               onClick={() => router.push("/premium")} 
-              className="w-full h-12 text-base font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/25 border-none"
+              className="w-full h-14 rounded-xl text-[15px] font-black bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-xl shadow-amber-500/25 border-none hover:-translate-y-1 active:scale-95 transition-all"
             >
-              Ver Planes Premium
+              Conocer Planes PRO
             </Button>
             <Button 
               variant="ghost" 
               onClick={() => setShowPremiumModal(false)}
-              className="w-full text-slate-500 hover:text-slate-800"
+              className="w-full text-slate-500 hover:text-slate-800 font-bold hover:bg-slate-100 rounded-xl h-12"
             >
               Quizás más tarde
             </Button>

@@ -59,7 +59,9 @@ export const ChatService = {
     // 1. Obtener datos del Cultivo para contexto de IA
     const cropRef = doc(db, 'users', userId, 'crops', cropId);
     const cropSnap = await getDoc(cropRef);
-    const cropType = cropSnap.exists() ? cropSnap.data().type : "Planta Desconocida";
+    const cropData = cropSnap.exists() ? cropSnap.data() : null;
+    const cropType = cropData?.type || "Planta Desconocida";
+    const cropName = cropData?.name || "Planta";
 
     // 2. Subida a Storage si hay imagen y conversión a Base64 para Genkit
     if (imageFile) {
@@ -108,7 +110,7 @@ export const ChatService = {
     }
 
     // 5. Llamar a Genkit de Google (Server Action real)
-    this.generateRealAIResponse(db, userId, cropId, cropType, userMessage.text, base64DataUri);
+    this.generateRealAIResponse(db, userId, cropId, cropType, cropName, userMessage.text, base64DataUri);
   },
 
   async generateRealAIResponse(
@@ -116,6 +118,7 @@ export const ChatService = {
     userId: string, 
     cropId: string, 
     cropType: string, 
+    cropName: string,
     symptomsText: string,
     photoDataUri?: string
   ) {
@@ -123,6 +126,7 @@ export const ChatService = {
       // Llamar al flow the Genkit
       const aiResponse = await analyzeCropHealth({
         cropType: cropType,
+        cropName: cropName,
         symptomsDescription: symptomsText,
         ...(photoDataUri && { photoDataUri })
       });
