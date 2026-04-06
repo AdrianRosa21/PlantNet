@@ -27,7 +27,11 @@ export type AnalyzeCropHealthInput = z.infer<
 >;
 
 const AnalyzeCropHealthOutputSchema = z.object({
-  message: z.string().describe('Una respuesta conversacional, amigable, experta y directa al usuario sobre su cultivo. Puedes usar emojis sutilmente y formato markdown para resaltar cosas importantes.'),
+  message: z.string().describe('Una respuesta conversacional y directa al usuario.'),
+  actions: z.array(z.object({
+    type: z.enum(['REGISTER_IRRIGATION', 'CREATE_TASK', 'CREATE_ALERT']),
+    payload: z.string().optional().describe('Detalles de la alerta o tarea, ej: Revisar hojas amarillas.'),
+  })).optional().describe('Acciones automáticas a ejecutar en el app del usuario.'),
 });
 export type AnalyzeCropHealthOutput = z.infer<
   typeof AnalyzeCropHealthOutputSchema
@@ -43,18 +47,25 @@ const prompt = ai.definePrompt({
   name: 'analyzeCropHealthPrompt',
   input: {schema: AnalyzeCropHealthInputSchema},
   output: {schema: AnalyzeCropHealthOutputSchema},
-  prompt: `Actúa como "AgroAlerta IA", el fiel, sabio y amigable agrónomo personal del usuario. 
+  prompt: `Actúa como "AgroVision AI", un asistente botánico e inteligente. 
 
-Tu tarea es conversar con el usuario sobre su cultivo basándote en su texto o foto. Eres muy cercano, tuteas al usuario, usas emojis agrícolas (🌱, 💧, 🚜) con medida, y das respuestas orgánicas, no mecanizadas ni en plantillas fijas. Usa Markdown para que tu texto sea bonito y fácil de leer. Siempre recuérdale al usuario sutilmente cuando la situación se ve grave que eres solo una IA orientativa.
+Tu objetivo es responder de forma DIRECTA y CONCISA a lo que el usuario pida. 
+Si envían una foto y preguntan qué es, diles qué es. Si piden un diagnóstico, dales el diagnóstico. Si solo saludan, saluda amistosamente. NO asumas que toda foto es para un diagnóstico o plan de acción a menos que lo parezca o el usuario lo pida. Sé muy conversacional y conciso. Evita relleno innecesario.
 
-Cultivo en cuestión: {{{cropName}}} (Familia agronómica: {{{cropType}}})
+ADEMÁS, tienes la capacidad de ejecutar comandos silentes en la app del usuario mediante 'actions'.
+Si detectas que el usuario expresa que hizo una acción o pide recordar algo, usa las 'actions':
+- REGISTER_IRRIGATION: Si el usuario indica que regó su planta hoy.
+- CREATE_TASK: Si el usuario pide recordar algo o registrar una labor futura (usa 'payload' con la descripción).
+- CREATE_ALERT: Si el usuario detecta una plaga o enfermedad (usa 'payload' con el detalle).
+
+Cultivo actual: {{{cropName}}} (Familia: {{{cropType}}})
 
 {{#if symptomsDescription}}
-El productor dice: {{{symptomsDescription}}}
+Mensaje del usuario: {{{symptomsDescription}}}
 {{/if}}
 
 {{#if photoDataUri}}
-Foto adjunta por el productor: {{media url=photoDataUri}}
+Foto adjunta: {{media url=photoDataUri}}
 {{/if}}`,
 });
 

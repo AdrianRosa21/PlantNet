@@ -20,7 +20,7 @@ export function CropTour() {
         { element: "#tour-water", popover: { title: "Progreso de Riego", description: "Conoce tu objetivo e hidratación diaria para esta planta.", side: "bottom" } },
         { element: "#tour-irrigation", popover: { title: "Control Diario", description: "Usa este botón diariamente para registrar tus riegos. ¡Te avisaremos si el suelo se empieza a ahogar!", side: "top" } },
         { element: "#tour-calendar", popover: { title: "Calendario Histórico", description: "Navega hacia días pasados tocando estas fechas para ver la bitácora anterior en modo 'Solo Lectura'.", side: "bottom" } },
-        { element: "#tour-chat", popover: { title: "AgroAlerta IA", description: "El cerebro botánico en tu bolsillo. Usa la cámara para ver enfermedades en hojas, o dicta por voz un problema al sistema.", side: "top" } },
+        { element: "#tour-chat", popover: { title: "IA Manos Libres y Escáner", description: "Sube una foto y ve la magia óptica. O envíale comandos de voz como: 'Regué la planta', ¡ella apuntará todo por ti en el calendario! Y si quieres que te hable, dale al ícono 🔊 junto a cada respuesta.", side: "top" } },
         { element: "#tour-tasks", popover: { title: "Tareas del Día", description: "No te olvides de nada importante: anota cuándo cosechar, podar o abonar.", side: "top" } }
       ]
     });

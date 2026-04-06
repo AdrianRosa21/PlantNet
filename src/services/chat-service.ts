@@ -7,7 +7,8 @@ import {
   getDoc,
   updateDoc,
   serverTimestamp, 
-  Firestore 
+  Firestore,
+  increment
 } from 'firebase/firestore';
 import { 
   ref, 
@@ -130,6 +131,33 @@ export const ChatService = {
         symptomsDescription: symptomsText,
         ...(photoDataUri && { photoDataUri })
       });
+
+      // Ejecutar Acciones Invisibles (Genkit Tools manuales)
+      if (aiResponse.actions && aiResponse.actions.length > 0) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const dateStr = `${yyyy}-${mm}-${dd}`;
+
+        for (const action of aiResponse.actions) {
+          try {
+            if (action.type === 'REGISTER_IRRIGATION') {
+              const dailyLogRef = doc(db, 'users', userId, 'crops', cropId, 'dailyLogs', dateStr);
+              await setDoc(dailyLogRef, { irrigations: increment(1), date: dateStr }, { merge: true });
+            } else if (action.type === 'CREATE_TASK' || action.type === 'CREATE_ALERT') {
+              const tasksRef = collection(db, 'users', userId, 'crops', cropId, 'dailyLogs', dateStr, 'tasks');
+              await setDoc(doc(tasksRef), {
+                content: action.payload || 'Nueva instrucción IA en bitácora',
+                completed: false,
+                createdAt: new Date().toISOString()
+              });
+            }
+          } catch(e) {
+            console.error('Error executing AI action:', e);
+          }
+        }
+      }
 
       // La IA ahora es conversacional
       const systemResponseText = aiResponse.message;
