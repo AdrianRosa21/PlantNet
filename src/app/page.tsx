@@ -2,37 +2,128 @@
 
 import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { Leaf, Sprout, Droplet, Calendar, MessageSquare, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-/**
- * Pantalla de inicio de la aplicación.
- * Redirige automáticamente al panel si el usuario está autenticado,
- * o a la pantalla de inicio de sesión en caso contrario.
- */
 export default function Home() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Solo redirigimos cuando Firebase ha terminado de verificar el estado inicial
-    if (!isUserLoading) {
-      if (user) {
-        router.push("/dashboard");
-      } else {
-        router.push("/login");
-      }
-    }
-  }, [user, isUserLoading, router]);
+    setMounted(true);
+  }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8 text-center bg-white">
-      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-        <div className="w-12 h-12 bg-primary rounded-xl rotate-45 flex items-center justify-center shadow-lg">
-           <span className="text-white text-2xl font-bold -rotate-45">A</span>
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center relative overflow-hidden font-body selection:bg-primary/20">
+      
+      {/* Background Decorators - Friendly, premium, light vibe */}
+      <div className="absolute top-0 w-full h-[600px] bg-gradient-to-b from-primary/10 via-primary/5 to-transparent pointer-events-none" />
+      <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-emerald-300/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-40 -left-40 w-[600px] h-[600px] bg-green-300/20 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Navbar / Header */}
+      <header className="w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-between relative z-10">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md rotate-3 transition-transform hover:rotate-6">
+            <Leaf className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-2xl font-bold text-slate-800 tracking-tight">
+            Cultiv<span className="text-primary">IA</span>
+          </span>
         </div>
-      </div>
-      <h1 className="text-2xl font-bold text-primary mb-2">AgroAlerta IA</h1>
-      <p className="text-muted-foreground animate-pulse">Iniciando sistema agrícola...</p>
+        
+        {mounted && !isUserLoading && (
+          <div>
+            {user ? (
+              <Link 
+                href="/dashboard"
+                className="flex items-center gap-2 bg-white/80 backdrop-blur-md border border-slate-200 px-5 py-2.5 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+              >
+                Ir a mi panel
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <Link 
+                href="/login"
+                className="flex items-center gap-2 bg-white/80 backdrop-blur-md border border-slate-200 px-5 py-2.5 rounded-full text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+              >
+                Iniciar sesión
+              </Link>
+            )}
+          </div>
+        )}
+      </header>
+
+      {/* Hero Section */}
+      <main className="w-full max-w-6xl mx-auto px-6 pt-16 pb-24 relative z-10 flex flex-col items-center text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium text-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <Sprout className="w-4 h-4" />
+          <span>Cultiva con tecnología accesible</span>
+        </div>
+        
+        <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight mb-8 max-w-4xl leading-tight animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+          Tu asistente digital <br className="hidden md:inline" />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-600">para el campo.</span>
+        </h1>
+        
+        <p className="text-lg md:text-xl text-slate-600 mb-12 max-w-2xl leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+          CultivIA acompaña a pequeños y medianos productores, facilitando la identificación de problemas, el registro diario de tus cultivos y recomendaciones prácticas. Todo al alcance de tu mano.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
+          <Link
+            href={user ? "/dashboard" : "/login"}
+            className="w-full sm:w-auto px-8 py-4 bg-primary text-white rounded-full font-semibold text-lg shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+          >
+            Empezar ahora
+            <ChevronRight className="w-5 h-5" />
+          </Link>
+        </div>
+
+        {/* Feature Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-28 w-full animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
+          
+          <div className="bg-white/60 backdrop-blur-xl border border-white/40 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all hover:-translate-y-1 text-left group">
+            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <MessageSquare className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Consulta Orientativa</h3>
+            <p className="text-slate-600 text-sm leading-relaxed">Habla o escribe para identificar problemas en tus plantas o para recibir orientación oportuna.</p>
+          </div>
+
+          <div className="bg-white/60 backdrop-blur-xl border border-white/40 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all hover:-translate-y-1 text-left group">
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <Sprout className="w-6 h-6 text-blue-500" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Recomendaciones IA</h3>
+            <p className="text-slate-600 text-sm leading-relaxed">Recibe consejos diarios adaptados al tipo de cultivo y las condiciones climáticas de tu ubicación.</p>
+          </div>
+
+          <div className="bg-white/60 backdrop-blur-xl border border-white/40 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all hover:-translate-y-1 text-left group">
+            <div className="w-12 h-12 bg-sky-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <Droplet className="w-6 h-6 text-sky-500" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Control Visual</h3>
+            <p className="text-slate-600 text-sm leading-relaxed">Registra de forma intuitiva el riego manual y sigue de cerca la hidratación de tus cultivos cada día.</p>
+          </div>
+
+          <div className="bg-white/60 backdrop-blur-xl border border-white/40 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all hover:-translate-y-1 text-left group">
+            <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <Calendar className="w-6 h-6 text-amber-500" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Registro de Notas</h3>
+            <p className="text-slate-600 text-sm leading-relaxed">Lleva un registro diario de las actividades y eventos importantes utilizando el calendario integrado.</p>
+          </div>
+
+        </div>
+      </main>
+
+      {/* Footer minimalista */}
+      <footer className="w-full text-center py-8 text-slate-400 text-sm mt-auto relative z-10">
+        &copy; {new Date().getFullYear()} CultivIA. Simplificando la agricultura.
+      </footer>
     </div>
   );
 }
