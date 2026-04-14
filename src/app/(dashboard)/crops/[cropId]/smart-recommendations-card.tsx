@@ -105,17 +105,17 @@ export function SmartRecommendationsCard({
 
   return (
     <>
-      <Card className="rounded-2xl shadow-sm border-none bg-gradient-to-br from-green-50 to-emerald-50/20 overflow-hidden relative">
-        <CardHeader className="pb-3 border-b border-green-100/50 bg-white/50 backdrop-blur-sm flex flex-row items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2 text-emerald-800">
-            <Sparkles className="w-5 h-5 text-emerald-500" />
+      <Card className="rounded-2xl shadow-sm border border-foreground/15 bg-background/50 overflow-hidden relative backdrop-blur-md">
+        <CardHeader className="pb-3 border-b border-foreground/15 bg-background/80 backdrop-blur-sm flex flex-row items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2 text-foreground font-black">
+            <Sparkles className="w-5 h-5 text-primary" />
             Recomendaciones IA
           </CardTitle>
           <Button 
             onClick={onGenerateClick} 
             disabled={isLoading}
             size="sm" 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-md shadow-primary/20"
           >
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Sparkles className="w-4 h-4 mr-1" />}
             Actualizar
@@ -123,24 +123,24 @@ export function SmartRecommendationsCard({
         </CardHeader>
         <CardContent className="p-4 space-y-4">
           {isLoading && (
-            <div className="flex flex-col items-center justify-center py-6 text-emerald-600 space-y-3">
+            <div className="flex flex-col items-center justify-center py-6 text-primary space-y-3">
               <Loader2 className="w-8 h-8 animate-spin" />
-              <p className="text-sm font-medium animate-pulse">Analizando tu {crop.name}...</p>
+              <p className="text-sm font-medium animate-pulse text-foreground/80">Analizando tu {crop.name}...</p>
             </div>
           )}
 
           {!isLoading && lastRecommendation && (
             <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-emerald-100">
-                <p className="text-sm text-slate-700 leading-relaxed">
+              <div className="bg-background rounded-xl p-4 shadow-sm border border-primary/20">
+                <p className="text-sm text-foreground/80 leading-relaxed">
                   {lastRecommendation.texto}
                 </p>
               </div>
-              <div className="flex items-start gap-3 bg-amber-50 rounded-xl p-3 border border-amber-100">
-                <Lightbulb className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 bg-secondary/10 rounded-xl p-3 border border-secondary/20">
+                <Lightbulb className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-0.5">Tip Rápido</p>
-                  <p className="text-sm text-amber-900 leading-snug">{lastRecommendation.tip}</p>
+                  <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-0.5">Tip Rápido</p>
+                  <p className="text-sm text-foreground/80 leading-snug">{lastRecommendation.tip}</p>
                 </div>
               </div>
             </div>
@@ -148,18 +148,18 @@ export function SmartRecommendationsCard({
 
           {!isLoading && !lastRecommendation && (
             <div className="text-center py-6 px-2">
-              <Info className="w-10 h-10 text-emerald-300 mx-auto mb-3" />
-              <p className="text-sm text-slate-600">Presiona "Actualizar" para conseguir un plan de cuidado hiper-personalizado por IA.</p>
+              <Info className="w-10 h-10 text-primary/50 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">Presiona "Actualizar" para conseguir un plan de cuidado hiper-personalizado por IA.</p>
             </div>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={showWizard} onOpenChange={setShowWizard}>
-        <DialogContent className="sm:max-w-[425px] rounded-2xl border-emerald-100 pb-6">
+        <DialogContent className="sm:max-w-[425px] rounded-2xl border-primary/20 bg-background/95 backdrop-blur-xl pb-6">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-emerald-800">
-              <Sparkles className="w-5 h-5 text-emerald-500" />
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <Sparkles className="w-5 h-5 text-primary" />
               Personaliza tu recomendación
             </DialogTitle>
             <DialogDescription>
@@ -201,7 +201,7 @@ export function SmartRecommendationsCard({
             <Button 
               onClick={() => handleGenerate(growthStage, lightCondition)} 
               disabled={!growthStage || !lightCondition || isLoading}
-              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-600/20"
+              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg shadow-primary/20"
             >
               Generar Diagnóstico
             </Button>

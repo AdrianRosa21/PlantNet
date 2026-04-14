@@ -40,7 +40,7 @@ export function CropTour() {
     <Button 
       variant="ghost" 
       size="icon" 
-      className="rounded-full text-slate-400 hover:text-primary hover:bg-primary/10 shrink-0 border border-slate-100" 
+      className="rounded-full text-foreground/80 hover:text-primary hover:bg-primary/10 shrink-0 border-2 border-foreground/20 shadow-sm bg-background/50 backdrop-blur-sm transition-all hover:border-primary/40" 
       onClick={() => driverObj.current?.drive()}
       title="Ver recorrido guiado"
     >

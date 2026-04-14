@@ -105,15 +105,27 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
 
   const { data: chatMessages } = useCollection(chatQuery);
 
-  // Auto-speak first system message
+  const initialLoadRef = useRef(false);
+  const prevMessagesLengthRef = useRef(0);
+
+  // Auto-speak ONLY new system messages, avoid initial mount history
   useEffect(() => {
-    if (chatMessages && chatMessages.length > 0 && !hasAutoSpokenRef.current) {
+    if (!chatMessages) return;
+
+    if (!initialLoadRef.current) {
+      // Es la carga inicial desde Firebase (el historial)
+      initialLoadRef.current = true;
+      prevMessagesLengthRef.current = chatMessages.length;
+      return;
+    }
+
+    // Si recibimos un mensaje nuevo añadido (no carga inicial)
+    if (chatMessages.length > prevMessagesLengthRef.current) {
       const lastMsg = chatMessages[chatMessages.length - 1];
-      // Si el último mensaje es del sistema y se acaba de recibir en la sesión
       if (lastMsg.messageType === 'system') {
-        hasAutoSpokenRef.current = true;
         speakText(lastMsg.text);
       }
+      prevMessagesLengthRef.current = chatMessages.length;
     }
   }, [chatMessages]);
 
@@ -232,22 +244,22 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
   };
 
   return (
-    <Card id="tour-chat" className="rounded-[2.5rem] border border-white/60 shadow-[0_16px_40px_rgba(0,0,0,0.08)] bg-white/70 backdrop-blur-2xl overflow-hidden mt-6 animate-in slide-in-from-bottom-8 duration-700 delay-700 ease-out">
-      <CardHeader className="pb-4 pt-6 px-6 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 border-b border-white/40 flex flex-row items-center justify-between relative">
-        <div className="absolute top-0 left-0 w-full h-8 bg-gradient-to-b from-white/60 to-transparent z-0 pointer-events-none" />
+    <Card id="tour-chat" className="rounded-[2.5rem] border border-foreground/15 shadow-[0_16px_40px_rgba(0,0,0,0.08)] bg-background/50 backdrop-blur-2xl overflow-hidden mt-6 animate-in slide-in-from-bottom-8 duration-700 delay-700 ease-out">
+      <CardHeader className="pb-4 pt-6 px-6 bg-background/80 border-b border-foreground/15 flex flex-row items-center justify-between relative">
+        <div className="absolute top-0 left-0 w-full h-8 bg-gradient-to-b from-background/90 to-transparent z-0 pointer-events-none" />
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-emerald-100 relative overflow-hidden">
-            <Sparkles className={cn("w-6 h-6 text-emerald-500 relative z-10", isSendingChat ? "animate-spin" : "")} />
-            {isSendingChat && <div className="absolute inset-0 bg-emerald-100 opacity-50 animate-pulse" />}
+          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/40 border-2 border-background relative overflow-hidden">
+            <Sparkles className={cn("w-6 h-6 text-primary-foreground relative z-10", isSendingChat ? "animate-spin" : "")} />
+            {isSendingChat && <div className="absolute inset-0 bg-white/20 opacity-50 animate-pulse" />}
           </div>
           <div>
-            <CardTitle className="text-xl font-black text-slate-800 tracking-tight">AgroVision AI</CardTitle>
-            <p className="text-[11px] font-bold text-teal-600 uppercase tracking-widest mt-0.5">Asistente General</p>
+            <CardTitle className="text-xl font-black text-foreground tracking-tight">AgroVision AI</CardTitle>
+            <p className="text-[11px] font-black text-foreground/80 uppercase tracking-widest mt-0.5">Asistente General</p>
           </div>
         </div>
-        <div className="relative z-10 flex h-3 w-3 sm:mr-2">
-          <span className={cn("absolute inline-flex h-full w-full rounded-full opacity-75", isSendingChat ? "bg-teal-400 animate-ping" : "bg-emerald-400 animate-ping")}></span>
-          <span className={cn("relative inline-flex rounded-full h-3 w-3 shadow-inner", isSendingChat ? "bg-teal-500" : "bg-emerald-500")}></span>
+        <div className="relative z-10 flex h-3.5 w-3.5 sm:mr-2">
+          <span className={cn("absolute inline-flex h-full w-full rounded-full opacity-75 shadow-lg", isSendingChat ? "bg-primary animate-ping" : "bg-primary animate-ping")}></span>
+          <span className={cn("relative inline-flex rounded-full h-3.5 w-3.5 shadow-sm border-2 border-background", isSendingChat ? "bg-primary" : "bg-primary")}></span>
         </div>
       </CardHeader>
       
@@ -262,7 +274,7 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
             animation: scanline 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
           }
         `}} />
-        <div className="absolute inset-0 bg-slate-50/30 backdrop-blur-[2px] z-0 pointer-events-none" />
+        <div className="absolute inset-0 bg-background/30 backdrop-blur-[2px] z-0 pointer-events-none" />
         <ScrollArea className="h-[350px] relative z-10" ref={chatScrollRef}>
           <div className="space-y-6 flex flex-col justify-end min-h-[max-content] h-full p-4 sm:p-6" style={{ minHeight: '100%' }}>
             {chatMessages && chatMessages.length > 0 ? (
@@ -274,8 +286,8 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
                   <div className={cn(
                     "p-4 rounded-3xl text-[15px] font-medium leading-relaxed shadow-sm relative overflow-hidden",
                     msg.messageType === 'user' 
-                      ? "bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-tr-sm" 
-                      : "bg-white text-slate-700 rounded-tl-sm border border-slate-100/80 shadow-[0_4px_24px_rgba(0,0,0,0.04)]"
+                      ? "bg-primary text-primary-foreground rounded-tr-sm" 
+                      : "bg-background text-foreground rounded-tl-sm border border-primary/10 shadow-[0_4px_24px_rgba(0,0,0,0.04)]"
                   )}>
                     {msg.messageType === 'user' && <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />}
                     {msg.imageUrl && (
@@ -287,35 +299,35 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
                     {msg.messageType === 'system' && (
                       <button 
                         onClick={() => speakText(msg.text)}
-                        className="absolute bottom-2 right-2 p-1.5 rounded-full text-emerald-600/50 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                        className="absolute bottom-2 right-2 p-1.5 rounded-full text-primary/50 hover:text-primary hover:bg-muted transition-colors"
                         title="Escuchar mensaje"
                       >
                         <Volume2 className="w-4 h-4" />
                       </button>
                     )}
                   </div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400/80 mt-1.5 px-2 tracking-wider">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground/80 mt-1.5 px-2 tracking-wider">
                     {msg.timestamp?.toDate ? msg.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Ahora'}
                   </span>
                 </div>
               ))
             ) : (
               <div className="text-center py-16 opacity-80 animate-in zoom-in duration-700">
-                <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-100 shadow-inner">
-                  <Sprout className="w-10 h-10 text-emerald-400 drop-shadow-sm" />
+                <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/10 shadow-inner">
+                  <Sprout className="w-10 h-10 text-primary drop-shadow-sm" />
                 </div>
-                <p className="text-sm font-bold text-slate-500 max-w-[220px] mx-auto leading-relaxed">Conectado a la red. Pregunta, habla o envía una imagen.</p>
+                <p className="text-sm font-bold text-muted-foreground max-w-[220px] mx-auto leading-relaxed">Conectado a la red. Pregunta, habla o envía una imagen.</p>
               </div>
             )}
             
             {isSendingChat && (
               <div className="flex flex-col mr-auto items-start max-w-[80%] animate-in fade-in duration-300">
-                <div className="p-4 rounded-3xl bg-white text-slate-500 rounded-tl-sm border border-slate-100 shadow-sm flex items-center gap-2">
-                   <span className="text-[13px] font-bold text-emerald-600 animate-pulse">Analizando...</span>
+                <div className="p-4 rounded-3xl bg-background text-muted-foreground rounded-tl-sm border border-primary/10 shadow-sm flex items-center gap-2">
+                   <span className="text-[13px] font-bold text-primary animate-pulse">Analizando...</span>
                    <span className="flex gap-1 ml-1">
-                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{animationDelay: "0ms"}}></span>
-                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{animationDelay: "150ms"}}></span>
-                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{animationDelay: "300ms"}}></span>
+                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{animationDelay: "0ms"}}></span>
+                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{animationDelay: "150ms"}}></span>
+                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{animationDelay: "300ms"}}></span>
                    </span>
                 </div>
               </div>
@@ -323,19 +335,19 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
           </div>
         </ScrollArea>
 
-        <div className="p-4 sm:p-5 bg-white/90 backdrop-blur-xl border-t border-slate-100/50 space-y-3 relative z-10 m-2 rounded-[2rem] shadow-[0_-4px_24px_rgba(0,0,0,0.02)]">
+        <div className="p-4 sm:p-5 bg-background/90 backdrop-blur-xl border-t border-primary/10 space-y-3 relative z-10 m-2 rounded-[2rem] shadow-[0_-4px_24px_rgba(0,0,0,0.02)]">
           {imagePreview && (
             <div className="relative inline-block animate-in zoom-in duration-300 mb-1">
-              <div className="w-20 h-20 rounded-2xl overflow-hidden border border-emerald-100 shadow-md relative">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden border border-primary/20 shadow-md relative">
                 <Image src={imagePreview} alt="Preview" fill sizes="80px" className="object-cover" />
                 {/* Efecto Scanner Láser Wow (Se ejecuta mientras se previsualiza o envia) */}
-                <div className="absolute inset-0 bg-emerald-500/20 z-10 mix-blend-overlay" />
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-emerald-400 shadow-[0_0_12px_2px_rgba(52,211,153,0.9)] z-20 animate-scanner-laser pointer-events-none" />
+                <div className="absolute inset-0 bg-primary/20 z-10 mix-blend-overlay" />
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-primary shadow-sm z-20 animate-scanner-laser pointer-events-none" />
               </div>
               {!isSendingChat && (
                 <button 
                   onClick={() => {setChatImage(null); setImagePreview(null);}}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:scale-110 transition-transform z-30"
+                  className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1.5 shadow-lg hover:scale-110 transition-transform z-30"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -343,8 +355,8 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
             </div>
           )}
           
-          <div className="flex gap-2 items-center bg-slate-50/80 p-1.5 rounded-full border border-slate-200/60 shadow-inner overflow-hidden">
-            <label className={cn("cursor-pointer w-11 h-11 flex items-center justify-center rounded-full hover:bg-white hover:shadow-sm hover:text-emerald-600 transition-all flex-shrink-0 z-10", isSendingChat ? "text-slate-300 pointer-events-none" : "text-slate-400")}>
+          <div className="flex gap-2 items-center bg-muted/30 p-1.5 rounded-full border border-primary/20 shadow-inner overflow-hidden">
+            <label className={cn("cursor-pointer w-11 h-11 flex items-center justify-center rounded-full hover:bg-background hover:shadow-sm hover:text-primary transition-all flex-shrink-0 z-10", isSendingChat ? "text-muted-foreground pointer-events-none" : "text-muted-foreground")}>
               <ImageIcon className="w-5 h-5" />
               <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} disabled={isSendingChat} />
             </label>
@@ -356,7 +368,7 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
               disabled={isSendingChat}
               className={cn(
                 "w-11 h-11 rounded-full transition-all shrink-0 flex items-center justify-center z-10",
-                isRecording ? "text-red-500 bg-red-50 border border-red-100 shadow-sm animate-pulse" : "text-slate-400 hover:bg-white hover:shadow-sm hover:text-emerald-600 border border-transparent"
+                isRecording ? "text-destructive bg-destructive/10 border border-destructive/20 shadow-sm animate-pulse" : "text-muted-foreground hover:bg-background hover:shadow-sm hover:text-primary border border-transparent"
               )}
             >
               {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -369,7 +381,7 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage()}
               disabled={isSendingChat}
-              className="rounded-full border-none h-11 text-[15px] font-medium bg-transparent focus-visible:ring-0 px-2 placeholder:text-slate-400 z-10"
+              className="rounded-full border-none h-11 text-[15px] font-medium bg-transparent focus-visible:ring-0 px-2 placeholder:text-muted-foreground/70 text-foreground z-10"
             />
             
             <Button 
@@ -379,8 +391,8 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
               className={cn(
                 "rounded-full h-11 w-11 shrink-0 transition-all shadow-md duration-300 z-10",
                 (chatInput.trim() || chatImage) && !isSendingChat
-                  ? "bg-gradient-to-br from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/25 hover:shadow-emerald-500/40 text-white"
-                  : "bg-slate-200 text-slate-400 cursor-not-allowed border-none shadow-none"
+                  ? "bg-primary hover:bg-primary/90 shadow-primary/25 hover:shadow-primary/40 text-primary-foreground"
+                  : "bg-muted text-muted-foreground/60 cursor-not-allowed border-none shadow-none"
               )}
             >
               {isSendingChat ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5 ml-0.5" />}
@@ -388,7 +400,7 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
 
             {/* Efecto Loading Background en el input */}
             {isSendingChat && (
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-50 to-teal-50 opacity-50 z-0 animate-pulse pointer-events-none" />
+              <div className="absolute inset-0 bg-primary/5 opacity-50 z-0 animate-pulse pointer-events-none" />
             )}
           </div>
         </div>

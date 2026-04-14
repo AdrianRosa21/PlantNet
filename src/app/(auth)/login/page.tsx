@@ -50,14 +50,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4 bg-slate-50 overflow-hidden">
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4 bg-background overflow-hidden">
       
       {/* BACKGROUND PREMIUM (Bubbly / Mesh Gradient) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-400/20 blur-[100px] mix-blend-multiply animate-pulse" />
-        <div className="absolute top-[30%] -right-[15%] w-[60%] h-[60%] rounded-full bg-amber-200/20 blur-[120px] mix-blend-multiply opacity-70" />
-        <div className="absolute -bottom-[20%] left-[20%] w-[50%] h-[50%] rounded-full bg-teal-400/20 blur-[100px] mix-blend-multiply opacity-50" />
-        <div className="absolute inset-0 bg-white/40 backdrop-blur-[50px] z-0" />
+        <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[100px] mix-blend-multiply animate-pulse" />
+        <div className="absolute top-[30%] -right-[15%] w-[60%] h-[60%] rounded-full bg-secondary/30 blur-[120px] mix-blend-multiply opacity-70" />
+        <div className="absolute -bottom-[20%] left-[20%] w-[50%] h-[50%] rounded-full bg-muted/40 blur-[100px] mix-blend-multiply opacity-50" />
+        <div className="absolute inset-0 bg-background/40 backdrop-blur-[50px] z-0" />
       </div>
 
       {/* Tarjeta Glassmorphic */}
@@ -66,14 +66,14 @@ export default function LoginPage() {
           
           {/* Cabecera WOW */}
           <div className="flex flex-col items-center text-center space-y-3 mb-8 mt-2">
-            <div className="relative w-16 h-16 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-2 before:absolute before:inset-0 before:bg-white/20 before:rounded-2xl before:scale-105 before:animate-ping before:duration-3000">
-              <Leaf className="text-white w-8 h-8 relative z-10" />
+            <div className="relative w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 mb-2 before:absolute before:inset-0 before:bg-white/20 before:rounded-2xl before:scale-105 before:animate-ping before:duration-3000">
+              <Leaf className="text-primary-foreground w-8 h-8 relative z-10" />
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-800 bg-clip-text text-transparent bg-gradient-to-r from-emerald-800 to-teal-600 pb-1">
+              <h1 className="text-2xl font-black tracking-tight text-foreground pb-1">
                 AgroAlerta IA
               </h1>
-              <p className="text-slate-500 text-sm font-medium mt-1">
+              <p className="text-foreground/70 text-sm font-medium mt-1">
                 Tu agrónomo personal impulsado por IA
               </p>
             </div>
@@ -82,10 +82,10 @@ export default function LoginPage() {
           {/* Formulario */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-700 font-semibold text-[13px] ml-1">Correo electrónico</Label>
+              <Label htmlFor="email" className="text-foreground/90 font-semibold text-[13px] ml-1">Correo electrónico</Label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <Mail className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 </div>
                 <Input 
                   id="email" 
@@ -94,18 +94,18 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="pl-11 h-12 bg-white/50 border-white/80 rounded-xl text-slate-800 placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all font-medium text-[15px]"
+                  className="pl-11 h-12 bg-white/50 border-white/80 rounded-xl text-foreground placeholder:text-muted-foreground focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary transition-all font-medium text-[15px]"
                 />
               </div>
             </div>
             
             <div className="space-y-2">
               <div className="flex items-center justify-between ml-1">
-                <Label htmlFor="password" className="text-slate-700 font-semibold text-[13px]">Contraseña</Label>
+                <Label htmlFor="password" className="text-foreground/90 font-semibold text-[13px]">Contraseña</Label>
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <Lock className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 </div>
                 <Input 
                   id="password" 
@@ -114,13 +114,13 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className={`pl-11 pr-11 h-12 bg-white/50 border-white/80 rounded-xl text-slate-800 placeholder:text-slate-400 placeholder:tracking-normal focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500 transition-all text-lg ${!showPassword && password.length > 0 ? "tracking-widest" : "tracking-normal"}`}
+                  className={`pl-11 pr-11 h-12 bg-white/50 border-white/80 rounded-xl text-foreground placeholder:text-muted-foreground placeholder:tracking-normal focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary transition-all text-lg ${!showPassword && password.length > 0 ? "tracking-widest" : "tracking-normal"}`}
                 />
                 <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center">
                   <button 
                     type="button" 
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-slate-400 hover:text-emerald-500 focus:outline-none transition-colors"
+                    className="text-muted-foreground hover:text-primary focus:outline-none transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -130,7 +130,7 @@ export default function LoginPage() {
 
             <Button 
               type="submit" 
-              className="w-full h-12 rounded-xl text-[15px] font-bold mt-6 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white shadow-lg shadow-emerald-500/25 transition-all border-none relative overflow-hidden group" 
+              className="w-full h-12 rounded-xl text-[15px] font-bold mt-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 transition-all border-none relative overflow-hidden group" 
               disabled={isLoading}
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
@@ -149,7 +149,7 @@ export default function LoginPage() {
           <div className="mt-6">
             <div className="relative flex items-center py-2">
               <div className="flex-grow border-t border-slate-200/70"></div>
-              <span className="flex-shrink-0 mx-3 text-slate-500 text-xs font-medium uppercase tracking-wide">O continuar con</span>
+              <span className="flex-shrink-0 mx-3 text-foreground/60 text-xs font-medium uppercase tracking-wide">O continuar con</span>
               <div className="flex-grow border-t border-slate-200/70"></div>
             </div>
 
@@ -157,7 +157,7 @@ export default function LoginPage() {
               type="button"
               variant="outline"
               onClick={handleGoogleLogin}
-              className="w-full h-12 mt-6 rounded-xl font-semibold bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm transition-all"
+              className="w-full h-12 mt-6 rounded-xl font-semibold bg-white hover:bg-background text-foreground border-slate-200 shadow-sm transition-all"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -171,9 +171,9 @@ export default function LoginPage() {
           </div>
 
           {/* Pie de página */}
-          <div className="mt-8 text-center text-[13px] text-slate-500 font-medium">
+          <div className="mt-8 text-center text-[13px] text-foreground/60 font-medium">
             ¿Aún no tienes cuenta?{" "}
-            <Link href="/register" className="text-emerald-600 font-bold hover:text-teal-600 hover:underline underline-offset-4 transition-all">
+            <Link href="/register" className="text-primary font-bold hover:text-primary/80 hover:underline underline-offset-4 transition-all">
               Regístrate y comienza tu huerto
             </Link>
           </div>
