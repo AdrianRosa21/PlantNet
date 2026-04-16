@@ -11,6 +11,7 @@ import {
 } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { ChatService } from "@/services/chat-service";
+import { useAccessibility } from "./accessibility-provider";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,8 +51,10 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-  const playbackIdRef = useRef<number>(0);
+  const playbackIdRef = useRef<string>("0");
   const hasAutoSpokenRef = useRef(false);
+
+  const { isAccessibleMode } = useAccessibility();
 
   const speakText = async (text: string) => {
     // Detener cualquier reproducción previa y limpiar su memoria
@@ -110,7 +113,7 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
 
   // Auto-speak ONLY new system messages, avoid initial mount history
   useEffect(() => {
-    if (!chatMessages) return;
+    if (!chatMessages || chatMessages.length === 0 || isSendingChat) return;
 
     if (!initialLoadRef.current) {
       // Es la carga inicial desde Firebase (el historial)
@@ -122,12 +125,21 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
     // Si recibimos un mensaje nuevo añadido (no carga inicial)
     if (chatMessages.length > prevMessagesLengthRef.current) {
       const lastMsg = chatMessages[chatMessages.length - 1];
-      if (lastMsg.messageType === 'system') {
+      
+      // En modo accesible hablamos siempre que sea del bot/sistema
+      // En modo normal, tal vez solo ciertos mensajes especiales (si los hay)
+      const isSystem = lastMsg.messageType === 'system';
+      
+      if (isSystem && (isAccessibleMode || lastMsg.id !== playbackIdRef.current.toString())) {
         speakText(lastMsg.text);
+        if (lastMsg.id) {
+           playbackIdRef.current = lastMsg.id;
+        }
       }
       prevMessagesLengthRef.current = chatMessages.length;
     }
-  }, [chatMessages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatMessages, isAccessibleMode]);
 
   // Speech Recognition Setup
   useEffect(() => {
@@ -172,6 +184,16 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
     if (isRecording) {
       recognitionRef.current.stop();
       setIsRecording(false);
+      
+      // Auto-enviar si estamos en modo accesible y hay texto
+      if (isAccessibleMode) {
+        // Usamos un pequeño delay para asegurar que el último transcript entró al estado
+        setTimeout(() => {
+          if (inputRef.current?.value || chatInput) {
+            handleSendChatMessage();
+          }
+        }, 300);
+      }
     } else {
       try {
         recognitionRef.current.start();
@@ -340,7 +362,6 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
             <div className="relative inline-block animate-in zoom-in duration-300 mb-1">
               <div className="w-20 h-20 rounded-2xl overflow-hidden border border-primary/20 shadow-md relative">
                 <Image src={imagePreview} alt="Preview" fill sizes="80px" className="object-cover" />
-                {/* Efecto Scanner Láser Wow (Se ejecuta mientras se previsualiza o envia) */}
                 <div className="absolute inset-0 bg-primary/20 z-10 mix-blend-overlay" />
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-primary shadow-sm z-20 animate-scanner-laser pointer-events-none" />
               </div>
@@ -355,54 +376,91 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
             </div>
           )}
           
-          <div className="flex gap-2 items-center bg-muted/30 p-1.5 rounded-full border border-primary/20 shadow-inner overflow-hidden">
-            <label className={cn("cursor-pointer w-11 h-11 flex items-center justify-center rounded-full hover:bg-background hover:shadow-sm hover:text-primary transition-all flex-shrink-0 z-10", isSendingChat ? "text-muted-foreground pointer-events-none" : "text-muted-foreground")}>
-              <ImageIcon className="w-5 h-5" />
-              <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} disabled={isSendingChat} />
-            </label>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleRecording}
-              disabled={isSendingChat}
-              className={cn(
-                "w-11 h-11 rounded-full transition-all shrink-0 flex items-center justify-center z-10",
-                isRecording ? "text-destructive bg-destructive/10 border border-destructive/20 shadow-sm animate-pulse" : "text-muted-foreground hover:bg-background hover:shadow-sm hover:text-primary border border-transparent"
+          {isAccessibleMode ? (
+            <div className="flex flex-col items-center gap-3">
+              <Button
+                size="lg"
+                onClick={toggleRecording}
+                disabled={isSendingChat}
+                className={cn(
+                  "w-full h-24 rounded-[2rem] text-lg font-black tracking-wider shadow-xl transition-all relative overflow-hidden",
+                  isRecording 
+                    ? "bg-destructive hover:bg-destructive text-white animate-pulse shadow-destructive/30" 
+                    : "bg-primary hover:bg-primary/90 text-white shadow-primary/30"
+                )}
+              >
+                {isRecording ? (
+                  <span className="flex items-center gap-3"><MicOff className="w-8 h-8" /> SOLTAR Y ENVIAR</span>
+                ) : (
+                  <span className="flex items-center gap-3"><Mic className="w-8 h-8" /> TOCAR PARA HABLAR</span>
+                )}
+              </Button>
+              {chatInput && (
+                <div className="w-full flex gap-2">
+                  <Input 
+                    disabled 
+                    value={chatInput} 
+                    className="flex-1 rounded-full bg-muted/50 border-transparent text-center font-medium opacity-60" 
+                  />
+                  <Button 
+                    onClick={handleSendChatMessage}
+                    disabled={isSendingChat}
+                    className="rounded-full bg-primary text-white"
+                  >
+                     <Send className="w-5 h-5" />
+                  </Button>
+                </div>
               )}
-            >
-              {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-            </Button>
-            
-            <Input 
-              ref={inputRef}
-              placeholder={isRecording ? "Modo dictado activo..." : "Describe el problema o sube imagen..."}
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage()}
-              disabled={isSendingChat}
-              className="rounded-full border-none h-11 text-[15px] font-medium bg-transparent focus-visible:ring-0 px-2 placeholder:text-muted-foreground/70 text-foreground z-10"
-            />
-            
-            <Button 
-              size="icon" 
-              onClick={handleSendChatMessage} 
-              disabled={isSendingChat || (!chatInput.trim() && !chatImage)}
-              className={cn(
-                "rounded-full h-11 w-11 shrink-0 transition-all shadow-md duration-300 z-10",
-                (chatInput.trim() || chatImage) && !isSendingChat
-                  ? "bg-primary hover:bg-primary/90 shadow-primary/25 hover:shadow-primary/40 text-primary-foreground"
-                  : "bg-muted text-muted-foreground/60 cursor-not-allowed border-none shadow-none"
-              )}
-            >
-              {isSendingChat ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5 ml-0.5" />}
-            </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2 items-center bg-muted/30 p-1.5 rounded-full border border-primary/20 shadow-inner overflow-hidden">
+              <label className={cn("cursor-pointer w-11 h-11 flex items-center justify-center rounded-full hover:bg-background hover:shadow-sm hover:text-primary transition-all flex-shrink-0 z-10", isSendingChat ? "text-muted-foreground pointer-events-none" : "text-muted-foreground")}>
+                <ImageIcon className="w-5 h-5" />
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} disabled={isSendingChat} />
+              </label>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleRecording}
+                disabled={isSendingChat}
+                className={cn(
+                  "w-11 h-11 rounded-full transition-all shrink-0 flex items-center justify-center z-10",
+                  isRecording ? "text-destructive bg-destructive/10 border border-destructive/20 shadow-sm animate-pulse" : "text-muted-foreground hover:bg-background hover:shadow-sm hover:text-primary border border-transparent"
+                )}
+              >
+                {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              </Button>
+              
+              <Input 
+                ref={inputRef}
+                placeholder={isRecording ? "Modo dictado activo..." : "Describe el problema o sube imagen..."}
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage()}
+                disabled={isSendingChat}
+                className="rounded-full border-none h-11 text-[15px] font-medium bg-transparent focus-visible:ring-0 px-2 placeholder:text-muted-foreground/70 text-foreground z-10"
+              />
+              
+              <Button 
+                size="icon" 
+                onClick={handleSendChatMessage} 
+                disabled={isSendingChat || (!chatInput.trim() && !chatImage)}
+                className={cn(
+                  "rounded-full h-11 w-11 shrink-0 transition-all shadow-md duration-300 z-10",
+                  (chatInput.trim() || chatImage) && !isSendingChat
+                    ? "bg-primary hover:bg-primary/90 shadow-primary/25 hover:shadow-primary/40 text-primary-foreground"
+                    : "bg-muted text-muted-foreground/60 cursor-not-allowed border-none shadow-none"
+                )}
+              >
+                {isSendingChat ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5 ml-0.5" />}
+              </Button>
 
-            {/* Efecto Loading Background en el input */}
-            {isSendingChat && (
-              <div className="absolute inset-0 bg-primary/5 opacity-50 z-0 animate-pulse pointer-events-none" />
-            )}
-          </div>
+              {isSendingChat && (
+                <div className="absolute inset-0 bg-primary/5 opacity-50 z-0 animate-pulse pointer-events-none" />
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -8,6 +8,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { signOut } from "firebase/auth";
+import { AccessibilityProvider } from "@/components/accessibility-provider";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -21,7 +22,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <AuthGuard>
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <AccessibilityProvider>
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header */}
         <header className="h-16 border-b border-primary/10 bg-background/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50 shadow-sm relative">
           <div className="flex items-center gap-2.5">
@@ -74,6 +76,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
         </nav>
       </div>
+      </AccessibilityProvider>
     </AuthGuard>
   );
 }

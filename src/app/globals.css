@@ -63,3 +63,21 @@
 .mobile-container {
   @apply mx-auto max-w-md min-h-screen bg-background shadow-xl flex flex-col relative;
 }
+
+/* 
+ * SENIOR MODE ACCESSIBILITY CLASSES 
+ * Estos estilos solo se activarán si el tag HTML tiene la clase .senior-mode
+ * Solo aumentamos el tamaño base y el interlineado sutilmente.
+ */
+.senior-mode {
+  /* Incrementar el tamaño base (el root font size) a 115% */
+  font-size: 115%;
+}
+
+.senior-mode p, .senior-mode span, .senior-mode div, .senior-mode input {
+  letter-spacing: 0.02em;
+}
+
+.senior-mode button {
+  min-height: 52px;
+}
