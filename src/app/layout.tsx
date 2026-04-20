@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import AdMobProvider from '@/components/admob-provider';
 
 export const metadata: Metadata = {
   title: 'AgroAlerta IA - Asistente Agrícola',
@@ -22,9 +23,11 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-slate-100 min-h-screen">
         <FirebaseClientProvider>
-          <div className="mobile-container">
-            {children}
-          </div>
+          <AdMobProvider>
+            <div className="mobile-container">
+              {children}
+            </div>
+          </AdMobProvider>
           <Toaster />
         </FirebaseClientProvider>
       </body>
