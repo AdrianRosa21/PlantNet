@@ -2,7 +2,7 @@
 
 import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { Leaf, Sprout, Droplet, Calendar, MessageSquare, ChevronRight } from "lucide-react";
+import { Leaf, Sprout, Droplet, Calendar, MessageSquare, ChevronRight, Globe2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -13,7 +13,11 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Auto-redirección si ya está logueado
+    if (!isUserLoading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, isUserLoading, router]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center relative overflow-hidden font-body selection:bg-primary/20">
@@ -65,70 +69,110 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <main className="w-full max-w-6xl mx-auto px-6 pt-16 pb-24 relative z-10 flex flex-col items-center text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-background/80 shadow-sm backdrop-blur-md text-foreground font-bold text-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-          </span>
-          <span>Cultiva con tecnología accesible</span>
-        </div>
+      <main className="w-full max-w-6xl mx-auto px-6 pt-4 pb-20 relative z-10 flex flex-col items-center text-center">
         
-        <h1 className="text-5xl md:text-7xl font-black text-foreground drop-shadow-sm tracking-tight mb-8 max-w-4xl leading-[1.1] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+        <h1 className="text-[3.5rem] md:text-[5.5rem] leading-[1.05] font-black text-foreground drop-shadow-sm tracking-tighter mb-6 max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-700">
           Tu asistente digital <br className="hidden md:inline" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-800 drop-shadow-sm">para el campo.</span>
         </h1>
         
-        <p className="text-lg md:text-xl text-foreground/80 font-medium mb-12 max-w-2xl leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-          CultivIA acompaña a pequeños y medianos productores, facilitando la identificación de problemas, el registro diario de tus cultivos y recomendaciones prácticas. Todo al alcance de tu mano.
+        <p className="text-lg md:text-xl text-foreground/80 font-medium mb-10 max-w-2xl leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+          Identifica problemas, registra tus cultivos y recibe recomendaciones prácticas con Inteligencia Artificial. Todo al alcance de tu mano.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
+        {/* Botón HASTA EL TOPE */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 mb-16 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200">
           <Link
             href={user ? "/dashboard" : "/register"}
-            className="w-full sm:w-auto px-10 py-5 bg-primary text-primary-foreground rounded-full font-black text-lg shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:bg-primary/90 hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-12 py-5 bg-primary text-primary-foreground rounded-full font-black text-xl shadow-2xl shadow-primary/40 hover:shadow-primary/60 hover:bg-primary/90 hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-2"
           >
             Empezar ahora gratis
             <ChevronRight className="w-6 h-6" />
           </Link>
         </div>
 
-        {/* Feature Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-28 w-full animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
+        {/* Feature Cards Grid (ESTETICO Y BREVE) */}
+        <div className="w-full max-w-4xl bg-white/70 backdrop-blur-2xl border border-primary/20 rounded-[2.5rem] p-8 md:p-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-blue-500/5 to-amber-500/5 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
           
-          <div className="bg-background/80 backdrop-blur-xl border border-primary/10 p-6 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-all hover:-translate-y-1 hover:bg-background/90 text-left group">
-            <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-inner border border-emerald-100">
-              <MessageSquare className="w-7 h-7 text-emerald-600" />
+          <h3 className="text-xl font-black text-foreground tracking-tight mb-8 relative z-10">4 herramientas en 1 sola app:</h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
+            <div className="flex flex-col items-center text-center gap-3 group/item">
+              <div className="p-4 bg-emerald-50 text-emerald-600 rounded-[1.5rem] group-hover/item:scale-110 group-hover/item:bg-emerald-100 transition-all shadow-sm"><MessageSquare className="w-7 h-7"/></div>
+              <span className="text-sm font-bold text-foreground/80 leading-tight">Consultas IA</span>
             </div>
-            <h3 className="text-lg font-black text-foreground tracking-tight mb-2">Consulta Orientativa</h3>
-            <p className="text-foreground/70 font-medium text-sm leading-relaxed">Habla o escribe para identificar problemas en tus plantas o para recibir orientación oportuna.</p>
-          </div>
-
-          <div className="bg-background/80 backdrop-blur-xl border border-primary/10 p-6 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-all hover:-translate-y-1 hover:bg-background/90 text-left group">
-            <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-inner border border-blue-100">
-              <Sprout className="w-7 h-7 text-blue-600" />
+            <div className="flex flex-col items-center text-center gap-3 group/item">
+              <div className="p-4 bg-blue-50 text-blue-600 rounded-[1.5rem] group-hover/item:scale-110 group-hover/item:bg-blue-100 transition-all shadow-sm"><Sprout className="w-7 h-7"/></div>
+              <span className="text-sm font-bold text-foreground/80 leading-tight">Clima y Cuidados</span>
             </div>
-            <h3 className="text-lg font-black text-foreground tracking-tight mb-2">Recomendaciones IA</h3>
-            <p className="text-foreground/70 font-medium text-sm leading-relaxed">Recibe consejos diarios adaptados al tipo de cultivo y las condiciones climáticas de tu ubicación.</p>
-          </div>
-
-          <div className="bg-background/80 backdrop-blur-xl border border-primary/10 p-6 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-all hover:-translate-y-1 hover:bg-background/90 text-left group">
-            <div className="w-14 h-14 bg-sky-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-inner border border-sky-100">
-              <Droplet className="w-7 h-7 text-sky-500" />
+            <div className="flex flex-col items-center text-center gap-3 group/item">
+              <div className="p-4 bg-sky-50 text-sky-500 rounded-[1.5rem] group-hover/item:scale-110 group-hover/item:bg-sky-100 transition-all shadow-sm"><Droplet className="w-7 h-7"/></div>
+              <span className="text-sm font-bold text-foreground/80 leading-tight">Control de Riego</span>
             </div>
-            <h3 className="text-lg font-black text-foreground tracking-tight mb-2">Control Visual</h3>
-            <p className="text-foreground/70 font-medium text-sm leading-relaxed">Registra de forma intuitiva el riego manual y sigue de cerca la hidratación de tus cultivos cada día.</p>
-          </div>
-
-          <div className="bg-background/80 backdrop-blur-xl border border-primary/10 p-6 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-all hover:-translate-y-1 hover:bg-background/90 text-left group">
-            <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-inner border border-amber-100">
-              <Calendar className="w-7 h-7 text-amber-500" />
+            <div className="flex flex-col items-center text-center gap-3 group/item">
+              <div className="p-4 bg-amber-50 text-amber-500 rounded-[1.5rem] group-hover/item:scale-110 group-hover/item:bg-amber-100 transition-all shadow-sm"><Calendar className="w-7 h-7"/></div>
+              <span className="text-sm font-bold text-foreground/80 leading-tight">Diario de Notas</span>
             </div>
-            <h3 className="text-lg font-black text-foreground tracking-tight mb-2">Registro de Notas</h3>
-            <p className="text-foreground/70 font-medium text-sm leading-relaxed">Lleva un registro diario de las actividades y eventos importantes utilizando el calendario integrado.</p>
           </div>
-
         </div>
+
+        {/* ODS Section */}
+        <div className="w-full mt-12 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-400/10 via-emerald-500/10 to-sky-500/10 blur-3xl rounded-[3rem] -z-10" />
+          
+          <div className="bg-background/60 backdrop-blur-2xl border border-primary/10 rounded-[3rem] p-8 md:p-12 shadow-[0_8px_30px_rgba(0,0,0,0.04)] text-center animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-500">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-background/80 text-foreground/80 font-bold text-sm mb-6 shadow-sm">
+              <Globe2 className="w-4 h-4 text-blue-500" />
+              <span>Impacto Global</span>
+            </div>
+            
+            <h2 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-4">
+              Alineados con los <br className="md:hidden" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600">Objetivos de Desarrollo Sostenible</span>
+            </h2>
+            <p className="text-foreground/70 font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
+              CultivIA no solo es tecnología, es una herramienta diseñada para crear un impacto real en el mundo, apoyando directamente la agenda 2030 de la ONU.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              
+              {/* ODS 2: Hambre Cero */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-6 bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-[2rem] border border-amber-200/50 hover:shadow-xl hover:shadow-amber-500/10 transition-all hover:-translate-y-1 text-left group">
+                <img src="/images/ods-2.png" alt="ODS 2 Hambre Cero" className="w-20 h-20 shrink-0 rounded-2xl shadow-lg shadow-amber-500/30 group-hover:scale-105 transition-transform object-cover bg-[#dda63a]" />
+                <div>
+                  <h3 className="text-xl font-black text-amber-900 mb-2 tracking-tight">Hambre Cero</h3>
+                  <p className="text-amber-900/70 text-sm font-medium leading-relaxed">
+                    Al empoderar a los agricultores con IA, aumentamos el rendimiento de los cultivos y reducimos las pérdidas por plagas, asegurando una mayor disponibilidad de alimentos.
+                  </p>
+                </div>
+              </div>
+
+              {/* ODS 13: Acción por el Clima */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-6 bg-gradient-to-br from-emerald-50 to-green-50/50 rounded-[2rem] border border-emerald-200/50 hover:shadow-xl hover:shadow-emerald-500/10 transition-all hover:-translate-y-1 text-left group">
+                <img src="/images/ods-13.png" alt="ODS 13 Acción por el Clima" className="w-20 h-20 shrink-0 rounded-2xl shadow-lg shadow-emerald-700/30 group-hover:scale-105 transition-transform object-cover bg-[#3f7e44]" />
+                <div>
+                  <h3 className="text-xl font-black text-emerald-900 mb-2 tracking-tight">Acción por el Clima</h3>
+                  <p className="text-emerald-900/70 text-sm font-medium leading-relaxed">
+                    Fomentamos prácticas agrícolas sostenibles y la optimización de recursos, ayudando al campo a adaptarse y mitigar los efectos del cambio climático.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        {/* Botón POR ÚLTIMO */}
+        <div className="mt-16 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-700 w-full flex justify-center">
+          <Link
+            href={user ? "/dashboard" : "/register"}
+            className="px-10 py-5 bg-slate-800 text-white rounded-full font-black text-lg shadow-2xl shadow-slate-800/30 hover:-translate-y-1 hover:shadow-slate-800/50 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            Únete a la evolución agrícola
+            <ChevronRight className="w-5 h-5" />
+          </Link>
+        </div>
+
       </main>
 
       {/* Footer minimalista */}

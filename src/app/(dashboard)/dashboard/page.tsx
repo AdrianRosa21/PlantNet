@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { verifyCropCreation } from "@/ai/flows/verify-crop-creation";
 import { DashboardTour } from "@/components/dashboard-tour";
+import BannerAd from "@/components/mobile/banner-ad";
 
 const CROP_ICONS = [
   { name: "Sprout", icon: Sprout },
@@ -477,6 +478,9 @@ export default function DashboardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Banner de AdMob */}
+      <BannerAd position="bottom" margin={64} />
     </div>
   );
 }

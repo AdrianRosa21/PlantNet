@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "592476351919",
+    "project_id": "studio-9525092173-1991a",
+    "storage_bucket": "studio-9525092173-1991a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:592476351919:android:6c201885f8c7e80813d35a",
+        "android_client_info": {
+          "package_name": "com.cultivia.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "592476351919-bpl74sa6jhfak0bflmfhulf6katmiong.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cultivia.app",
+            "certificate_hash": "6330ac897b9f2294d2d8ca11eb24f69ba273cce4"
+          }
+        },
+        {
+          "client_id": "592476351919-b2tp2r22hk01l5mio6487mn7qacev7li.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBOH3TSZdta6taqodudZ6hGu76DlKBYVfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "592476351919-b2tp2r22hk01l5mio6487mn7qacev7li.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

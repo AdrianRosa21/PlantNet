@@ -88,7 +88,13 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
   return (
     <AccessibilityContext.Provider value={{ isAccessibleMode, isLoading }}>
-      {children}
+      {isLoading ? (
+        <div className="flex h-screen items-center justify-center bg-background">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : (
+        children
+      )}
     </AccessibilityContext.Provider>
   );
 }

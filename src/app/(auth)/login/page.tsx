@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
+import { Capacitor } from "@capacitor/core";
+import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +21,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const auth = useAuth();
+  const { auth, firestore } = useFirebase();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,11 +45,46 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    toast({
-      title: "Próximamente",
-      description: "La integración con Google estará lista en la versión final.",
-    });
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      let user;
+      if (Capacitor.isNativePlatform()) {
+        const nativeResult = await FirebaseAuthentication.signInWithGoogle();
+        const credential = GoogleAuthProvider.credential(nativeResult.credential?.idToken);
+        const authResult = await signInWithCredential(auth, credential);
+        user = authResult.user;
+      } else {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        user = result.user;
+      }
+
+      const userProfileRef = doc(firestore, 'users', user.uid);
+      const userSnap = await getDoc(userProfileRef);
+
+      if (!userSnap.exists()) {
+        const profileData = {
+          id: user.uid,
+          email: user.email,
+          nombre: user.displayName,
+          tipo_cuenta: "gratuita",
+          consultas_ia_mes: 0,
+          createdAt: new Date().toISOString(),
+        };
+        await setDoc(userProfileRef, profileData);
+        toast({ title: "¡Cuenta creada!", description: "Bienvenido a AgroAlerta IA." });
+        router.push("/onboarding");
+      } else {
+        toast({ title: "¡Bienvenido de vuelta!", description: "Iniciando tu entorno..." });
+        router.push("/dashboard");
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast({ variant: "destructive", title: "Error con Google", description: "No pudimos conectar con tu cuenta." });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

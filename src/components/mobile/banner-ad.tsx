@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
+import { useAdMob } from '@/components/admob-provider';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 interface BannerAdProps {
   position?: 'top' | 'bottom';
@@ -12,8 +15,21 @@ interface BannerAdProps {
 
 export default function BannerAd({ position = 'bottom', size = 'BANNER', margin = 0 }: BannerAdProps) {
   const [isBannerVisible, setIsBannerVisible] = useState(false);
+  const { isInitialized } = useAdMob();
+
+  // Premium Check
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const userRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "users", user.uid);
+  }, [firestore, user]);
+  const { data: userData } = useDoc(userRef);
+  const isPremium = userData?.tipo_cuenta === 'premium';
 
   useEffect(() => {
+    if (!isInitialized || isPremium === undefined || isPremium === true) return;
+    
     let adShown = false;
 
     const showBanner = async () => {
@@ -58,7 +74,7 @@ export default function BannerAd({ position = 'bottom', size = 'BANNER', margin 
         AdMob.removeBanner().catch(console.error);
       }
     };
-  }, [position, size, margin]);
+  }, [position, size, margin, isInitialized, isPremium]);
 
   if (!isBannerVisible) return null;
 
