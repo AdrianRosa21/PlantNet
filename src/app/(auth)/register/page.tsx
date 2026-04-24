@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { createUserWithEmailAndPassword, updateProfile, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
+import React, { useState } from "react";
+import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
@@ -25,37 +25,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { auth, firestore } = useFirebase();
-
-  // Captura el resultado de Google redirect al volver a la app
-  useEffect(() => {
-    setIsLoading(true);
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (!result) return;
-        const user = result.user;
-        const userProfileRef = doc(firestore, 'users', user.uid);
-        const userSnap = await getDoc(userProfileRef);
-        if (!userSnap.exists()) {
-          await setDoc(userProfileRef, {
-            id: user.uid,
-            email: user.email,
-            nombre: user.displayName,
-            tipo_cuenta: "gratuita",
-            consultas_ia_mes: 0,
-            createdAt: new Date().toISOString(),
-          });
-          toast({ title: "¡Cuenta creada con éxito!", description: "Bienvenido a la comunidad AgroAlerta IA." });
-          router.push("/onboarding");
-        } else {
-          toast({ title: "¡Bienvenido de vuelta!", description: "Iniciando tu entorno..." });
-          router.push("/dashboard");
-        }
-      })
-      .catch((error) => {
-        console.error("Redirect result error:", error);
-      })
-      .finally(() => setIsLoading(false));
-  }, [auth]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,39 +80,41 @@ export default function RegisterPage() {
   const handleGoogleRegister = async () => {
     setIsLoading(true);
     try {
+      let user;
       if (Capacitor.isNativePlatform()) {
-        // En Android/iOS usa el plugin nativo
         const nativeResult = await FirebaseAuthentication.signInWithGoogle();
         const credential = GoogleAuthProvider.credential(nativeResult.credential?.idToken);
         const authResult = await signInWithCredential(auth, credential);
-        const user = authResult.user;
-
-        const userProfileRef = doc(firestore, 'users', user.uid);
-        const userSnap = await getDoc(userProfileRef);
-        if (!userSnap.exists()) {
-          await setDoc(userProfileRef, {
-            id: user.uid,
-            email: user.email,
-            nombre: user.displayName,
-            tipo_cuenta: "gratuita",
-            consultas_ia_mes: 0,
-            createdAt: new Date().toISOString(),
-          });
-          toast({ title: "¡Cuenta creada con éxito!", description: "Bienvenido a la comunidad AgroAlerta IA." });
-          router.push("/onboarding");
-        } else {
-          toast({ title: "¡Bienvenido de vuelta!", description: "Iniciando tu entorno..." });
-          router.push("/dashboard");
-        }
+        user = authResult.user;
       } else {
-        // En web: redirect evita el error COOP de Firebase App Hosting
         const provider = new GoogleAuthProvider();
-        await signInWithRedirect(auth, provider);
-        // El resultado se procesa en el useEffect de getRedirectResult
+        const result = await signInWithPopup(auth, provider);
+        user = result.user;
+      }
+
+      const userProfileRef = doc(firestore, 'users', user.uid);
+      const userSnap = await getDoc(userProfileRef);
+
+      if (!userSnap.exists()) {
+        const profileData = {
+          id: user.uid,
+          email: user.email,
+          nombre: user.displayName,
+          tipo_cuenta: "gratuita",
+          consultas_ia_mes: 0,
+          createdAt: new Date().toISOString(),
+        };
+        await setDoc(userProfileRef, profileData);
+        toast({ title: "¡Cuenta creada con éxito!", description: "Bienvenido a la comunidad AgroAlerta IA." });
+        router.push("/onboarding");
+      } else {
+        toast({ title: "¡Bienvenido de vuelta!", description: "Iniciando tu entorno..." });
+        router.push("/dashboard");
       }
     } catch (error: any) {
       console.error(error);
       toast({ variant: "destructive", title: "Error con Google", description: "No pudimos registrarte con Google." });
+    } finally {
       setIsLoading(false);
     }
   };
