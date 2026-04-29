@@ -176,8 +176,9 @@ export default function Home() {
       </main>
 
       {/* Footer minimalista */}
-      <footer className="w-full text-center py-8 text-slate-400 text-sm mt-auto relative z-10">
-        &copy; {new Date().getFullYear()} CultivIA. Simplificando la agricultura.
+      <footer className="w-full text-center py-8 text-slate-400 text-sm mt-auto relative z-10 flex flex-col gap-1">
+        <span>&copy; {new Date().getFullYear()} CultivIA. Simplificando la agricultura.</span>
+        <span className="font-medium text-slate-500">Hecho por Rodrigo Rosa y Fabiola Belén</span>
       </footer>
     </div>
   );
