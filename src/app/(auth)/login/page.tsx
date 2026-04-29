@@ -6,7 +6,6 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
-import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +49,7 @@ export default function LoginPage() {
     try {
       let user;
       if (Capacitor.isNativePlatform()) {
+        const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
         const nativeResult = await FirebaseAuthentication.signInWithGoogle();
         const credential = GoogleAuthProvider.credential(nativeResult.credential?.idToken);
         const authResult = await signInWithCredential(auth, credential);
