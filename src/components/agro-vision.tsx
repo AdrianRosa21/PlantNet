@@ -544,7 +544,13 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
               audio={false}
               ref={webcamRef}
               screenshotFormat="image/jpeg"
-              videoConstraints={{ facingMode: "environment" }}
+              videoConstraints={{ 
+                facingMode: "environment",
+                width: 1280,
+                height: 720
+              }}
+              onUserMedia={() => console.log("Cámara iniciada")}
+              onUserMediaError={(err) => console.error("Error de cámara:", err)}
               className="w-full h-auto max-h-[60vh] object-cover rounded-2xl shadow-2xl border border-primary/20"
             />
             <div className="flex gap-4 mt-6">
