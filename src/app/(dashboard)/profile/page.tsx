@@ -138,7 +138,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="space-y-0.5">
                   <p className="text-3xl font-black text-foreground">{isPremium ? "∞" : queriesDone} <span className="text-sm font-semibold text-muted-foreground">{!isPremium && `/ ${maxQueries}`}</span></p>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Mente Colmena IA</p>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Consultas IA</p>
                 </div>
                 {/* Progress bar Neumórfica */}
                 {!isPremium && (

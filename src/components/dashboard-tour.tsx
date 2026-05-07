@@ -17,7 +17,7 @@ export function DashboardTour() {
     
     // Configurar pasos dinámicamente según el modo
     const steps: any[] = [
-      { popover: { title: "¡Bienvenido a AgroAlerta!", description: "Vamos a dar un paseo rápido para que aprendas a cuidar tus cultivos como un profesional." } },
+      { popover: { title: "¡Bienvenido a CultivIA!", description: "Vamos a dar un paseo rápido para que aprendas a cuidar tus cultivos como un profesional." } },
       { element: "#tour-weather", popover: { title: "Clima Inteligente", description: "Nuestra IA cruza tu ubicación con pronósticos meteorológicos en tiempo real para darte sugerencias valiosas.", side: "bottom" } },
       { element: "#tour-add-crop", popover: { title: "Añade tu Cultivo", description: "Todo empieza aquí. Pulsa este botón para añadir tu primera planta o cultivo y aprovechar todas nuestras utilidades.", side: "left" } }
     ];
@@ -43,7 +43,7 @@ export function DashboardTour() {
   useEffect(() => {
     if (isLoading || !mounted) return;
 
-    const hasSeenTour = localStorage.getItem("agroalerta-tour-dashboard");
+    const hasSeenTour = localStorage.getItem("cultivia-tour-dashboard");
     if (!hasSeenTour) {
       // Usar un intervalo para esperar que el DOM real (clima) se dibuje
       const checkDOM = setInterval(() => {
@@ -51,7 +51,7 @@ export function DashboardTour() {
           clearInterval(checkDOM);
           setTimeout(() => {
             driverObj.current?.drive();
-            localStorage.setItem("agroalerta-tour-dashboard", "true");
+            localStorage.setItem("cultivia-tour-dashboard", "true");
           }, 300);
         }
       }, 500);

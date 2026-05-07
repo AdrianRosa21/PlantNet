@@ -132,7 +132,7 @@ export default function PremiumPage() {
                   <div className="p-2 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg shadow-lg">
                      <Crown className="text-white w-5 h-5 drop-shadow-sm" />
                   </div>
-                  <span className="font-bold text-lg text-white tracking-wide">AgroAlerta PRO</span>
+                  <span className="font-bold text-lg text-white tracking-wide">CultivIA PRO</span>
                 </div>
                 <div className="text-right relative z-10">
                   <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">$1.99 <span className="text-[13px] font-semibold text-slate-500 uppercase tracking-widest block -mt-1">USD / mes</span></span>

@@ -5,7 +5,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import AdMobProvider from '@/components/admob-provider';
 
 export const metadata: Metadata = {
-  title: 'AgroAlerta IA - Asistente Agrícola',
+  title: 'CultivIA - Asistente Agrícola',
   description: 'App para el monitoreo y cuidado inteligente de cultivos',
 };
 

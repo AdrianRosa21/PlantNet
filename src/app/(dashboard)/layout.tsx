@@ -27,11 +27,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Top Header */}
         <header className="h-16 border-b border-primary/10 bg-background/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50 shadow-sm relative">
           <div className="flex items-center gap-2.5">
-            <div className="relative w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-              <Leaf className="text-primary-foreground w-5 h-5 relative z-10" />
+            <div className="relative w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 overflow-hidden">
+              <img src="/logo.png" alt="CultivIA Logo" className="w-full h-full object-cover" />
             </div>
             <span className="font-black text-xl tracking-tight text-foreground">
-              AgroAlerta <span className="text-primary">IA</span>
+              Cultiv<span className="text-primary">IA</span>
             </span>
           </div>
           <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground hover:text-primary hover:bg-muted transition-colors">

@@ -27,8 +27,16 @@ import {
   MicOff, 
   Loader2, 
   Send,
-  Volume2
+  Volume2,
+  Camera
 } from "lucide-react";
+import Webcam from "react-webcam";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface AgroVisionProps {
   cropId: string;
@@ -53,8 +61,24 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const playbackIdRef = useRef<string>("0");
   const hasAutoSpokenRef = useRef(false);
+  const webcamRef = useRef<Webcam>(null);
+  const [showWebcam, setShowWebcam] = useState(false);
 
   const { isAccessibleMode } = useAccessibility();
+
+  const handleCapturePhoto = () => {
+    const imageSrc = webcamRef.current?.getScreenshot();
+    if (imageSrc) {
+      fetch(imageSrc)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+          setChatImage(file);
+          setImagePreview(imageSrc);
+          setShowWebcam(false);
+        });
+    }
+  };
 
   const speakText = async (text: string) => {
     // Detener cualquier reproducción previa y limpiar su memoria
@@ -266,16 +290,16 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
   };
 
   return (
-    <Card id="tour-chat" className="rounded-[2.5rem] border border-foreground/15 shadow-[0_16px_40px_rgba(0,0,0,0.08)] bg-background/50 backdrop-blur-2xl overflow-hidden mt-6 animate-in slide-in-from-bottom-8 duration-700 delay-700 ease-out">
+    <Card id="tour-chat" className="rounded-[2.5rem] border border-foreground/15 shadow-[0_16px_40px_rgba(0,0,0,0.08)] bg-background/50 backdrop-blur-2xl overflow-hidden mt-6 animate-in slide-in-from-bottom-8 duration-700 delay-700 ease-out relative">
       <CardHeader className="pb-4 pt-6 px-6 bg-background/80 border-b border-foreground/15 flex flex-row items-center justify-between relative">
         <div className="absolute top-0 left-0 w-full h-8 bg-gradient-to-b from-background/90 to-transparent z-0 pointer-events-none" />
         <div className="relative z-10 flex items-center gap-3">
           <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/40 border-2 border-background relative overflow-hidden">
-            <Sparkles className={cn("w-6 h-6 text-primary-foreground relative z-10", isSendingChat ? "animate-spin" : "")} />
-            {isSendingChat && <div className="absolute inset-0 bg-white/20 opacity-50 animate-pulse" />}
+            <img src="/logo.png" alt="CultivIA" className="w-full h-full object-cover relative z-10" />
+            {isSendingChat && <div className="absolute inset-0 bg-white/20 opacity-50 animate-pulse z-20" />}
           </div>
           <div>
-            <CardTitle className="text-xl font-black text-foreground tracking-tight">AgroVision AI</CardTitle>
+            <CardTitle className="text-xl font-black text-foreground tracking-tight">Cultiv<span className="text-primary">IA</span></CardTitle>
             <p className="text-[11px] font-black text-foreground/80 uppercase tracking-widest mt-0.5">Asistente General</p>
           </div>
         </div>
@@ -414,10 +438,26 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
             </div>
           ) : (
             <div className="flex gap-2 items-center bg-muted/30 p-1.5 rounded-full border border-primary/20 shadow-inner overflow-hidden">
-              <label className={cn("cursor-pointer w-11 h-11 flex items-center justify-center rounded-full hover:bg-background hover:shadow-sm hover:text-primary transition-all flex-shrink-0 z-10", isSendingChat ? "text-muted-foreground pointer-events-none" : "text-muted-foreground")}>
-                <ImageIcon className="w-5 h-5" />
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} disabled={isSendingChat} />
-              </label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button disabled={isSendingChat} className={cn("w-11 h-11 flex items-center justify-center rounded-full hover:bg-background hover:shadow-sm hover:text-primary transition-all flex-shrink-0 z-10 outline-none", isSendingChat ? "text-muted-foreground pointer-events-none" : "text-muted-foreground")}>
+                    <ImageIcon className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="rounded-xl border-primary/10 w-48 p-2">
+                  <DropdownMenuItem asChild className="mb-1 rounded-lg">
+                    <label className="cursor-pointer flex items-center gap-3 w-full p-2 hover:bg-muted font-semibold">
+                      <ImageIcon className="w-4 h-4 text-primary" />
+                      <span>Subir Galería</span>
+                      <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+                    </label>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowWebcam(true)} className="cursor-pointer flex items-center gap-3 p-2 hover:bg-muted font-semibold rounded-lg">
+                    <Camera className="w-4 h-4 text-primary" />
+                    <span>Tomar Foto</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               
               <Button
                 variant="ghost"
@@ -462,6 +502,24 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
             </div>
           )}
         </div>
+        
+        {showWebcam && (
+          <div className="absolute inset-0 bg-background/95 backdrop-blur-md z-50 flex flex-col items-center justify-center rounded-[2.5rem] p-4 animate-in fade-in zoom-in-95 duration-300">
+            <Webcam
+              audio={false}
+              ref={webcamRef}
+              screenshotFormat="image/jpeg"
+              videoConstraints={{ facingMode: "environment" }}
+              className="w-full h-auto max-h-[60vh] object-cover rounded-2xl shadow-2xl border border-primary/20"
+            />
+            <div className="flex gap-4 mt-6">
+              <Button variant="outline" size="lg" onClick={() => setShowWebcam(false)} className="rounded-full h-14 px-8 font-bold border-primary/20">Cancelar</Button>
+              <Button onClick={handleCapturePhoto} size="lg" className="rounded-full h-14 px-8 bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/30">
+                <Camera className="w-5 h-5 mr-2" /> Capturar
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

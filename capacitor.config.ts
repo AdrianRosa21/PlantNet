@@ -5,11 +5,8 @@ const config: CapacitorConfig = {
   appName: 'CultivIA',
   webDir: 'out',
   server: {
-    // Para desarrollo local, descomenta esta línea:
-    // url: 'http://192.168.1.7:9002',
-    // PRODUCCIÓN — dominio de Firebase App Hosting:
-    url: 'https://cultivia-app--studio-9525092173-1991a.us-east4.hosted.app',
-    cleartext: false
+    url: 'https://cultivia.vercel.app',
+    cleartext: true
   },
   plugins: {
     FirebaseAuthentication: {

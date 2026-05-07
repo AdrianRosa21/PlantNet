@@ -32,7 +32,7 @@ export interface ChatMessageData {
 }
 
 /**
- * Servicio de Chat de AgroAlerta IA.
+ * Servicio de Chat de CultivIA.
  * Maneja el envío de mensajes, subida de fotos y respuestas simuladas.
  */
 export const ChatService = {

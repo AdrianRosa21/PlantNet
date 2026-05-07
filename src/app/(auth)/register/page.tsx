@@ -56,7 +56,7 @@ export default function RegisterPage() {
 
       toast({
         title: "¡Cuenta creada con éxito!",
-        description: "Bienvenido a la comunidad AgroAlerta IA.",
+        description: "Bienvenido a la comunidad CultivIA.",
       });
       router.push("/dashboard");
     } catch (error: any) {
@@ -105,7 +105,7 @@ export default function RegisterPage() {
           createdAt: new Date().toISOString(),
         };
         await setDoc(userProfileRef, profileData);
-        toast({ title: "¡Cuenta creada con éxito!", description: "Bienvenido a la comunidad AgroAlerta IA." });
+        toast({ title: "¡Cuenta creada con éxito!", description: "Bienvenido a la comunidad CultivIA." });
         router.push("/onboarding");
       } else {
         toast({ title: "¡Bienvenido de vuelta!", description: "Iniciando tu entorno..." });
@@ -145,8 +145,8 @@ export default function RegisterPage() {
 
           {/* Cabecera WOW */}
           <div className="flex flex-col items-center text-center space-y-3 mb-8 mt-6 sm:mt-2">
-            <div className="relative w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 mb-2 before:absolute before:inset-0 before:bg-white/20 before:rounded-2xl before:scale-105 before:animate-ping before:duration-3000">
-              <UserPlus className="text-primary-foreground w-7 h-7 relative z-10 ml-1" />
+            <div className="relative w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 mb-2 overflow-hidden before:absolute before:inset-0 before:bg-white/20 before:rounded-2xl before:scale-105 before:animate-ping before:duration-3000">
+              <img src="/logo.png" alt="CultivIA Logo" className="w-full h-full object-cover relative z-10" />
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-tight text-foreground pb-1">

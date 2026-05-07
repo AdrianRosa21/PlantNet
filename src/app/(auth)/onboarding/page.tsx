@@ -105,7 +105,7 @@ export default function OnboardingPage() {
               Personaliza tu Experiencia
             </h1>
             <p className="text-foreground/60 text-sm font-medium">
-              AgroAlerta se adaptará a lo que te parezca más cómodo.
+              CultivIA se adaptará a lo que te parezca más cómodo.
             </p>
           </div>
 
