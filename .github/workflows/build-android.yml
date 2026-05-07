@@ -27,6 +27,9 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Create webDir for Capacitor
+        run: mkdir out
+
       - name: Sync Capacitor
         run: npx cap sync android
 
