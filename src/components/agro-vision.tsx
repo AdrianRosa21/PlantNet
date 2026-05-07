@@ -31,6 +31,7 @@ import {
   Camera
 } from "lucide-react";
 import Webcam from "react-webcam";
+import { Camera as CapacitorCamera } from '@capacitor/camera';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,6 +66,40 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
   const [showWebcam, setShowWebcam] = useState(false);
 
   const { isAccessibleMode } = useAccessibility();
+
+  // Función para pedir permisos NATIVOS en Android
+  const requestAndroidPermissions = async (type: 'camera' | 'mic' | 'location') => {
+    if (!Capacitor.isNativePlatform()) return true;
+
+    try {
+      if (type === 'camera') {
+        const status = await CapacitorCamera.requestPermissions({ permissions: ['camera'] });
+        return status.camera === 'granted';
+      }
+      if (type === 'location') {
+        // Usamos geolocalización nativa si es posible
+        const { Geolocation } = await import('@capacitor/geolocation');
+        const status = await Geolocation.requestPermissions();
+        return status.location === 'granted';
+      }
+    } catch (e) {
+      console.warn("Error pidiendo permisos:", e);
+      return false;
+    }
+    return true;
+  };
+
+  // Pedir permiso de ubicación al cargar para el clima
+  useEffect(() => {
+    requestAndroidPermissions('location');
+  }, []);
+
+  // Al abrir la webcam, forzar permiso de cámara
+  useEffect(() => {
+    if (showWebcam) {
+      requestAndroidPermissions('camera');
+    }
+  }, [showWebcam]);
 
   const handleCapturePhoto = () => {
     const imageSrc = webcamRef.current?.getScreenshot();
@@ -200,7 +235,7 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
     }
   }, []);
 
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (!recognitionRef.current) {
       toast({ variant: "destructive", title: "No soportado", description: "Reconocimiento de voz no soportado por tu navegador actual." });
       return;
