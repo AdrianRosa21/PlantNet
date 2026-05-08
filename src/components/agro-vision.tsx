@@ -101,17 +101,30 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
     }
   }, [showWebcam]);
 
-  const handleCapturePhoto = () => {
-    const imageSrc = webcamRef.current?.getScreenshot();
-    if (imageSrc) {
-      fetch(imageSrc)
-        .then(res => res.blob())
-        .then(blob => {
-          const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-          setChatImage(file);
-          setImagePreview(imageSrc);
-          setShowWebcam(false);
-        });
+  const handleCapturePhoto = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      setShowWebcam(true);
+      return;
+    }
+
+    try {
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: 'dataUrl',
+        source: 'CAMERA'
+      });
+
+      if (image.dataUrl) {
+        const res = await fetch(image.dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+        setChatImage(file);
+        setImagePreview(image.dataUrl);
+      }
+    } catch (e) {
+      console.error("Error con cámara nativa:", e);
+      toast({ variant: "destructive", title: "Cámara", description: "No se pudo abrir la cámara nativa." });
     }
   };
 
@@ -487,7 +500,7 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
                       <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
                     </label>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowWebcam(true)} className="cursor-pointer flex items-center gap-3 p-2 hover:bg-muted font-semibold rounded-lg">
+                  <DropdownMenuItem onClick={handleCapturePhoto} className="cursor-pointer flex items-center gap-3 p-2 hover:bg-muted font-semibold rounded-lg">
                     <Camera className="w-4 h-4 text-primary" />
                     <span>Tomar Foto</span>
                   </DropdownMenuItem>
@@ -538,7 +551,7 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
           )}
         </div>
         
-        {showWebcam && (
+        {!Capacitor.isNativePlatform() && showWebcam && (
           <div className="absolute inset-0 bg-background/95 backdrop-blur-md z-50 flex flex-col items-center justify-center rounded-[2.5rem] p-4 animate-in fade-in zoom-in-95 duration-300">
             <Webcam
               audio={false}
@@ -555,7 +568,23 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
             />
             <div className="flex gap-4 mt-6">
               <Button variant="outline" size="lg" onClick={() => setShowWebcam(false)} className="rounded-full h-14 px-8 font-bold border-primary/20">Cancelar</Button>
-              <Button onClick={handleCapturePhoto} size="lg" className="rounded-full h-14 px-8 bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/30">
+              <Button 
+                onClick={() => {
+                  const imageSrc = webcamRef.current?.getScreenshot();
+                  if (imageSrc) {
+                    fetch(imageSrc)
+                      .then(res => res.blob())
+                      .then(blob => {
+                        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+                        setChatImage(file);
+                        setImagePreview(imageSrc);
+                        setShowWebcam(false);
+                      });
+                  }
+                }} 
+                size="lg" 
+                className="rounded-full h-14 px-8 bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/30"
+              >
                 <Camera className="w-5 h-5 mr-2" /> Capturar
               </Button>
             </div>
