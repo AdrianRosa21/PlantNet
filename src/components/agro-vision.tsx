@@ -31,6 +31,7 @@ import {
   Camera
 } from "lucide-react";
 import Webcam from "react-webcam";
+import { Capacitor } from "@capacitor/core";
 import { Camera as CapacitorCamera } from '@capacitor/camera';
 import {
   DropdownMenu,
@@ -296,9 +297,12 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log("Imagen seleccionada:", file.name);
       setChatImage(file);
       const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -492,20 +496,32 @@ export function AgroVision({ cropId, onLimitReached }: AgroVisionProps) {
                     <ImageIcon className="w-5 h-5" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="rounded-xl border-primary/10 w-48 p-2">
-                  <DropdownMenuItem asChild className="mb-1 rounded-lg">
-                    <label className="cursor-pointer flex items-center gap-3 w-full p-2 hover:bg-muted font-semibold">
-                      <ImageIcon className="w-4 h-4 text-primary" />
-                      <span>Subir Galería</span>
-                      <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-                    </label>
+                <DropdownMenuContent align="start" className="rounded-xl border-primary/10 w-48 p-2 z-[100]">
+                  <DropdownMenuItem 
+                    onClick={() => document.getElementById('file-upload')?.click()} 
+                    className="cursor-pointer flex items-center gap-3 p-2 hover:bg-muted font-semibold rounded-lg"
+                  >
+                    <ImageIcon className="w-4 h-4 text-primary" />
+                    <span>Subir Galería</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleCapturePhoto} className="cursor-pointer flex items-center gap-3 p-2 hover:bg-muted font-semibold rounded-lg">
+                  <DropdownMenuItem 
+                    onClick={handleCapturePhoto} 
+                    className="cursor-pointer flex items-center gap-3 p-2 hover:bg-muted font-semibold rounded-lg"
+                  >
                     <Camera className="w-4 h-4 text-primary" />
                     <span>Tomar Foto</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* Input oculto para galería */}
+              <input 
+                id="file-upload"
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleImageSelect} 
+              />
               
               <Button
                 variant="ghost"
